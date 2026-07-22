@@ -58,3 +58,6 @@ app.*.map.json
 
 # Dev-tool output (tool/verify_protocol.dart)
 login_options.json
+
+# Claude Code local settings (permissions etc.)
+.claude/settings.local.json
