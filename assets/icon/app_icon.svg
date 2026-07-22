@@ -1,0 +1,20 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6366F5"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <linearGradient id="spark" x1="360" y1="240" x2="680" y2="800" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EDE9FF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <!-- Signature four-point spark, concave quadratic edges (matches in-app BrandMark) -->
+  <path d="M 512 192
+           Q 607 417 832 512
+           Q 607 607 512 832
+           Q 417 607 192 512
+           Q 417 417 512 192 Z"
+        fill="url(#spark)"/>
+</svg>
