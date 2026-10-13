@@ -40,7 +40,7 @@ void check(String name, bool ok, [String? detail]) {
 Future<void> main() async {
   stdout.writeln('=== DEEIX client protocol verification ===');
 
-  check('api base', AppConfig.apiBaseUrl == 'https://vps.cli-help.com');
+  check('api base', AppConfig.apiBaseUrl == 'https://chat.cli-help.com');
   check('api prefix', AppConfig.apiPrefix == '/api/v1');
   check('login path', ApiEndpoints.login == '/auth/login');
   check(
@@ -569,8 +569,8 @@ Future<void> main() async {
   });
   check(
     'share public url',
-    share.publicUrl('https://vps.cli-help.com') ==
-        'https://vps.cli-help.com/share/s_abc',
+    share.publicUrl('https://chat.cli-help.com') ==
+        'https://chat.cli-help.com/share/s_abc',
   );
 
   final overview = BillingOverview.fromApi({

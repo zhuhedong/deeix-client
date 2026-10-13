@@ -17,7 +17,7 @@ void main() {
   group('AppConfig / endpoints', () {
     test('default base and API prefix match DEEIX deployment', () {
       expect(AppConfig.apiPrefix, '/api/v1');
-      expect(AppConfig.apiBaseUrl, 'https://vps.cli-help.com');
+      expect(AppConfig.apiBaseUrl, 'https://chat.cli-help.com');
       expect(ApiEndpoints.login, '/auth/login');
       expect(ApiEndpoints.refresh, '/auth/refresh');
       expect(ApiEndpoints.me, '/me');

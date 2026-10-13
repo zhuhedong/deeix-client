@@ -5,12 +5,12 @@
 class AppConfig {
   AppConfig._();
 
-  /// Public API origin, e.g. `https://vps.cli-help.com`
+  /// Public API origin, e.g. `https://chat.cli-help.com`
   /// Override at build time:
   /// `flutter run --dart-define=API_BASE_URL=https://your.domain`
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://vps.cli-help.com',
+    defaultValue: 'https://chat.cli-help.com',
   );
 
   /// API path prefix used by DEEIX-Chat (Swagger basePath).
@@ -28,5 +28,5 @@ class AppConfig {
 
   /// Swagger doc for this deployment.
   static const String swaggerDocUrl =
-      'https://vps.cli-help.com/swagger/doc.json';
+      'https://chat.cli-help.com/swagger/doc.json';
 }
