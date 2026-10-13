@@ -8,28 +8,51 @@ import '../../../shared/widgets/loading_view.dart';
 import '../../../shared/widgets/ui_kit.dart';
 import '../data/billing_repository.dart';
 
-class BillingPage extends ConsumerWidget {
+class BillingPage extends ConsumerStatefulWidget {
   const BillingPage({super.key});
+
+  @override
+  ConsumerState<BillingPage> createState() => _BillingPageState();
+}
+
+typedef _BillingData = ({
+  BillingOverview overview,
+  UsageSummary usage,
+  List<DailyActivity> activity,
+});
+
+class _BillingPageState extends ConsumerState<BillingPage> {
+  // Created once (not in build) so rebuilds don't refetch everything.
+  late Future<_BillingData> _future = _load();
+
+  Future<_BillingData> _load() async {
+    final repo = await ref.read(billingRepositoryProvider.future);
+    final overview = await repo.overview();
+    final usage = await repo.usage();
+    // Activity stats are new in DEEIX-Chat 0.4.4; older servers just skip it.
+    final activity = await repo
+        .activity(days: 14)
+        .catchError((_) => const <DailyActivity>[]);
+    return (overview: overview, usage: usage, activity: activity);
+  }
 
   static String _money(double? v) => v == null ? '-' : v.toStringAsFixed(2);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('用量与订阅')),
-      body: FutureBuilder<({BillingOverview overview, UsageSummary usage})>(
-        future: () async {
-          final repo = await ref.read(billingRepositoryProvider.future);
-          final overview = await repo.overview();
-          final usage = await repo.usage();
-          return (overview: overview, usage: usage);
-        }(),
+      body: FutureBuilder<_BillingData>(
+        future: _future,
         builder: (context, snap) {
           if (snap.connectionState != ConnectionState.done) {
             return const LoadingView(message: '加载计费信息…');
           }
           if (snap.hasError) {
-            return ErrorView(message: '${snap.error}');
+            return ErrorView(
+              message: '${snap.error}',
+              onRetry: () => setState(() => _future = _load()),
+            );
           }
           final theme = Theme.of(context);
           final overview = snap.data!.overview;
@@ -104,6 +127,11 @@ class BillingPage extends ConsumerWidget {
                   ],
                 ),
               ),
+
+              if (snap.data!.activity.isNotEmpty) ...[
+                const SectionLabel('近 14 天活跃'),
+                _ActivityChart(days: snap.data!.activity),
+              ],
 
               const SectionLabel('账户'),
               AppCardGroup(
@@ -181,6 +209,60 @@ class BillingPage extends ConsumerWidget {
     return ListTile(
       title: Text(k, style: theme.textTheme.bodyMedium),
       trailing: Text(v, style: theme.textTheme.titleSmall),
+    );
+  }
+}
+
+/// Tiny bar chart of daily request counts (no chart dependency).
+class _ActivityChart extends StatelessWidget {
+  const _ActivityChart({required this.days});
+
+  final List<DailyActivity> days;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final maxCount = days.fold<int>(
+      1,
+      (m, d) => d.requestCount > m ? d.requestCount : m,
+    );
+    final totalReq = days.fold<int>(0, (s, d) => s + d.requestCount);
+    final totalTok = days.fold<int>(0, (s, d) => s + d.tokenUsage);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            height: 72,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                for (final d in days)
+                  Expanded(
+                    child: Tooltip(
+                      message:
+                          '${d.date}：${d.requestCount} 次 · ${d.tokenUsage} tokens',
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 2),
+                        height: 4 + 68 * d.requestCount / maxCount,
+                        decoration: BoxDecoration(
+                          color: scheme.primary.withValues(alpha: 0.75),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '共 $totalReq 次请求 · $totalTok tokens',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
     );
   }
 }

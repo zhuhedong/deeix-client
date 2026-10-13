@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'conversation.freezed.dart';
@@ -17,6 +19,9 @@ abstract class Conversation with _$Conversation {
     DateTime? createdAt,
     String? projectID,
     String? projectName,
+
+    /// Conversation labels (DEEIX-Chat 0.4.4+, from `labelsJSON`).
+    @Default(<String>[]) List<String> labels,
   }) = _Conversation;
 
   factory Conversation.fromJson(Map<String, dynamic> json) =>
@@ -45,10 +50,29 @@ abstract class Conversation with _$Conversation {
       createdAt: parseTime(json['createdAt'] ?? json['created_at']),
       projectID: json['projectID'] as String?,
       projectName: json['projectName'] as String?,
+      labels: parseLabels(json['labels'] ?? json['labelsJSON']),
     );
   }
 
   const Conversation._();
+
+  /// `labelsJSON` is a JSON string array; also accepts a plain list.
+  static List<String> parseLabels(dynamic raw) {
+    dynamic v = raw;
+    if (v is String) {
+      if (v.trim().isEmpty) return const [];
+      try {
+        v = jsonDecode(v);
+      } catch (_) {
+        return const [];
+      }
+    }
+    if (v is! List) return const [];
+    return v
+        .map((e) => '$e'.trim())
+        .where((e) => e.isNotEmpty)
+        .toList(growable: false);
+  }
 
   /// Prefer non-empty title for UI.
   String get displayTitle {

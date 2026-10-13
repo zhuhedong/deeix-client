@@ -66,7 +66,16 @@ class ChatState {
     this.hasMoreMessages = false,
     this.branchIndexByParent = const {},
     this.boundConversationId,
+    this.selectedKnowledgeBaseIds = const {},
+    this.mediaKind,
   });
+
+  /// Knowledge bases used for retrieval on send (DEEIX-Chat 0.4.4+).
+  final Set<String> selectedKnowledgeBaseIds;
+
+  /// When set, sends go to the image / video generation endpoints instead of
+  /// the chat endpoint (DEEIX-Chat 0.4.4+).
+  final MediaKind? mediaKind;
 
   final List<ChatMessage> messages;
   final bool isLoading;
@@ -119,6 +128,9 @@ class ChatState {
     bool? hasMoreMessages,
     Map<String, int>? branchIndexByParent,
     String? boundConversationId,
+    Set<String>? selectedKnowledgeBaseIds,
+    MediaKind? mediaKind,
+    bool clearMediaKind = false,
     bool clearError = false,
     bool clearSelectedModel = false,
   }) {
@@ -138,6 +150,9 @@ class ChatState {
       hasMoreMessages: hasMoreMessages ?? this.hasMoreMessages,
       branchIndexByParent: branchIndexByParent ?? this.branchIndexByParent,
       boundConversationId: boundConversationId ?? this.boundConversationId,
+      selectedKnowledgeBaseIds:
+          selectedKnowledgeBaseIds ?? this.selectedKnowledgeBaseIds,
+      mediaKind: clearMediaKind ? null : (mediaKind ?? this.mediaKind),
     );
   }
 }
@@ -202,6 +217,47 @@ class ChatController extends Notifier<ChatState> {
 
   void setSelectedTools(Set<int> ids) {
     state = state.copyWith(selectedToolIds: ids);
+  }
+
+  void setKnowledgeBases(Set<String> ids) {
+    state = state.copyWith(selectedKnowledgeBaseIds: ids);
+  }
+
+  void setMediaKind(MediaKind? kind) {
+    state = state.copyWith(mediaKind: kind, clearMediaKind: kind == null);
+  }
+
+  /// DELETE a persisted message; the server re-parents its children, so the
+  /// thread is reloaded afterwards.
+  Future<void> deleteMessage(String messageId) async {
+    if (state.isStreaming || _convId.isEmpty) return;
+    if (messageId.startsWith('local-')) {
+      state = state.copyWith(
+        messages: state.messages.where((m) => m.id != messageId).toList(),
+      );
+      return;
+    }
+    try {
+      final convRepo = await ref.read(conversationRepositoryProvider.future);
+      await convRepo.deleteMessage(_convId, messageId);
+      await loadMessages();
+    } catch (e) {
+      state = state.copyWith(error: '删除失败: $e');
+    }
+  }
+
+  /// Fork the conversation at [messageId]; returns the new conversation id.
+  Future<String?> forkFromMessage(String messageId) async {
+    if (_convId.isEmpty || messageId.startsWith('local-')) return null;
+    try {
+      final convRepo = await ref.read(conversationRepositoryProvider.future);
+      final created = await convRepo.forkFromMessage(_convId, messageId);
+      unawaited(ref.read(conversationListProvider.notifier).refresh());
+      return created.publicID.isEmpty ? null : created.publicID;
+    } catch (e) {
+      state = state.copyWith(error: '创建分支对话失败: $e');
+      return null;
+    }
   }
 
   /// Select which sibling branch to show under [parentPublicID].
@@ -601,19 +657,32 @@ class ChatController extends Notifier<ChatState> {
       String? fileProcMessage;
       final gen = ref.read(genOptionsProvider);
 
-      await for (final chunk in repo.streamMessage(
-        conversationPublicId: _convId,
-        content: content,
-        contentType: contentType,
-        model: state.selectedModel,
-        fileIds: fileIds,
-        branchReason: branchReason,
-        parentMessagePublicID: parentMessagePublicID,
-        sourceMessagePublicID: sourceMessagePublicID,
-        options: gen.toOptionsMap(),
-        selectedToolIds: state.selectedToolIds.toList(),
-        cancelToken: _cancelToken,
-      )) {
+      final media = state.mediaKind;
+      final stream = (media != null && branchReason == null)
+          ? repo.streamMediaGeneration(
+              conversationPublicId: _convId,
+              kind: media,
+              prompt: content,
+              model: state.selectedModel,
+              fileIds: fileIds,
+              parentMessagePublicID: parentMessagePublicID,
+              cancelToken: _cancelToken,
+            )
+          : repo.streamMessage(
+              conversationPublicId: _convId,
+              content: content,
+              contentType: contentType,
+              model: state.selectedModel,
+              fileIds: fileIds,
+              branchReason: branchReason,
+              parentMessagePublicID: parentMessagePublicID,
+              sourceMessagePublicID: sourceMessagePublicID,
+              options: gen.toOptionsMap(),
+              selectedToolIds: state.selectedToolIds.toList(),
+              knowledgeBaseIds: state.selectedKnowledgeBaseIds.toList(),
+              cancelToken: _cancelToken,
+            );
+      await for (final chunk in stream) {
         final runId =
             chunk.raw?['runID'] as String? ??
             chunk.finalAssistantMessage?.runID;

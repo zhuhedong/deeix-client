@@ -79,6 +79,77 @@ class ConversationRepository {
     }
   }
 
+  /// GET /conversations/search?q= (DEEIX-Chat 0.4.4+) — full-text search
+  /// over titles and message content.
+  Future<({List<Conversation> results, bool hasMore})> search(
+    String query, {
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.conversationSearch,
+        queryParameters: {
+          'q': query.trim(),
+          'page': page,
+          'page_size': pageSize,
+        },
+      );
+      final data = ApiEnvelope.unwrapMap(response);
+      final results =
+          (data['results'] is List ? data['results'] as List : const [])
+              .whereType<Map>()
+              .map((e) => Conversation.fromApi(Map<String, dynamic>.from(e)))
+              .where((c) => c.publicID.isNotEmpty)
+              .toList();
+      return (results: results, hasMore: data['hasMore'] == true);
+    } on DioException catch (e) {
+      throw ApiException.fromDio(e);
+    }
+  }
+
+  /// PATCH /conversations/{id}/labels {labels}
+  Future<Conversation> setLabels(String publicId, List<String> labels) async {
+    try {
+      final response = await _dio.patch(
+        ApiEndpoints.conversationLabels(publicId),
+        data: {'labels': labels},
+      );
+      return Conversation.fromApi(ApiEnvelope.unwrapMap(response));
+    } on DioException catch (e) {
+      throw ApiException.fromDio(e);
+    }
+  }
+
+  /// DELETE /conversations/{id}/messages/{message_id}
+  Future<void> deleteMessage(String publicId, String messageId) async {
+    try {
+      ApiEnvelope.unwrap(
+        await _dio.delete(
+          ApiEndpoints.conversationMessage(publicId, messageId),
+        ),
+      );
+    } on DioException catch (e) {
+      throw ApiException.fromDio(e);
+    }
+  }
+
+  /// POST /conversations/{id}/messages/{message_id}/fork — copies the thread
+  /// up to that message into a new conversation.
+  Future<Conversation> forkFromMessage(
+    String publicId,
+    String messageId,
+  ) async {
+    try {
+      final response = await _dio.post(
+        ApiEndpoints.conversationMessageFork(publicId, messageId),
+      );
+      return Conversation.fromApi(ApiEnvelope.unwrapMap(response));
+    } on DioException catch (e) {
+      throw ApiException.fromDio(e);
+    }
+  }
+
   Future<void> delete(String publicId) async {
     try {
       final response = await _dio.delete(ApiEndpoints.conversation(publicId));

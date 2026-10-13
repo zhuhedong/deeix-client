@@ -120,6 +120,40 @@ class _ChatDrawerState extends ConsumerState<ChatDrawer> {
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          icon: const Icon(
+                            Icons.visibility_off_outlined,
+                            size: 18,
+                          ),
+                          label: const Text('临时对话'),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            context.push('/temporary-chat');
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          icon: const Icon(
+                            Icons.manage_search_rounded,
+                            size: 18,
+                          ),
+                          label: const Text('全文搜索'),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            context.push('/search');
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                   child: TextField(
                     controller: _searchCtrl,
                     decoration: InputDecoration(
@@ -307,6 +341,8 @@ class _ChatDrawerState extends ConsumerState<ChatDrawer> {
         }
       case 'project':
         await _assignProject(c.publicID);
+      case 'labels':
+        await _editLabels(c);
       case 'delete':
         await _confirmDelete(c, l10n);
     }
@@ -342,6 +378,51 @@ class _ChatDrawerState extends ConsumerState<ChatDrawer> {
         false;
     if (ok) {
       await ref.read(conversationListProvider.notifier).delete(c.publicID);
+    }
+  }
+
+  /// Labels (DEEIX-Chat 0.4.4+): comma / newline separated input.
+  Future<void> _editLabels(Conversation c) async {
+    final ctrl = TextEditingController(text: c.labels.join(', '));
+    final raw = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('编辑标签'),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: '标签',
+            hintText: '用逗号分隔，例如：工作, 学习',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, ctrl.text),
+            child: const Text('保存'),
+          ),
+        ],
+      ),
+    );
+    ctrl.dispose();
+    if (raw == null) return;
+    final labels = raw
+        .split(RegExp(r'[,，\n]'))
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toSet()
+        .toList();
+    try {
+      final repo = await ref.read(conversationRepositoryProvider.future);
+      await repo.setLabels(c.publicID, labels);
+      await ref.read(conversationListProvider.notifier).refresh();
+      _toast('标签已更新');
+    } catch (e) {
+      _toast('更新标签失败: $e');
     }
   }
 
@@ -483,11 +564,15 @@ class _DrawerRow extends StatelessWidget {
                           color: active ? scheme.primary : scheme.onSurface,
                         ),
                       ),
-                      if ((c.model ?? '').isNotEmpty || timeLabel != null)
+                      if ((c.model ?? '').isNotEmpty ||
+                          timeLabel != null ||
+                          c.labels.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(top: 1),
                           child: Text(
                             [
+                              if (c.labels.isNotEmpty)
+                                c.labels.map((l) => '#$l').join(' '),
                               if ((c.model ?? '').isNotEmpty) c.model!,
                               ?timeLabel,
                             ].join('  ·  '),
@@ -525,6 +610,7 @@ class _DrawerRow extends StatelessWidget {
                         _mi('archive', Icons.archive_outlined, l10n.archive),
                       _mi('share', Icons.link_rounded, l10n.shareLink),
                       _mi('project', Icons.folder_outlined, '设置项目'),
+                      _mi('labels', Icons.label_outline_rounded, '编辑标签'),
                       _mi('export', Icons.ios_share_rounded, '导出 JSON'),
                       _mi(
                         'delete',

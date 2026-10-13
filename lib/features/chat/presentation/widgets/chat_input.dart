@@ -1,3 +1,4 @@
+import '../../data/chat_repository.dart' show MediaKind;
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -24,7 +25,19 @@ class ChatInput extends StatefulWidget {
     this.onModelChanged,
     this.onOpenGenOptions,
     this.sendWithEnter = true,
+    this.knowledgeCount = 0,
+    this.onOpenKnowledge,
+    this.mediaKind,
+    this.onMediaKindChanged,
   });
+
+  /// Number of knowledge bases selected for retrieval.
+  final int knowledgeCount;
+  final VoidCallback? onOpenKnowledge;
+
+  /// Current media generation mode (null = normal chat).
+  final MediaKind? mediaKind;
+  final ValueChanged<MediaKind?>? onMediaKindChanged;
 
   final ValueChanged<String> onSend;
   final VoidCallback? onStop;
@@ -165,6 +178,44 @@ class _ChatInputState extends State<ChatInput> {
                         onTap: widget.isStreaming ? null : _openModelPicker,
                       ),
                     ),
+                    if (widget.onOpenKnowledge != null) ...[
+                      const SizedBox(width: 6),
+                      Badge(
+                        isLabelVisible: widget.knowledgeCount > 0,
+                        label: Text('${widget.knowledgeCount}'),
+                        child: _RoundIconButton(
+                          icon: Icons.library_books_outlined,
+                          tooltip: '知识库',
+                          onTap: widget.isStreaming
+                              ? null
+                              : widget.onOpenKnowledge,
+                        ),
+                      ),
+                    ],
+                    if (widget.onMediaKindChanged != null) ...[
+                      const SizedBox(width: 6),
+                      _RoundIconButton(
+                        icon: switch (widget.mediaKind) {
+                          MediaKind.image => Icons.image_rounded,
+                          MediaKind.video => Icons.movie_rounded,
+                          null => Icons.chat_bubble_outline_rounded,
+                        },
+                        tooltip: switch (widget.mediaKind) {
+                          MediaKind.image => '图片生成模式（点按切换）',
+                          MediaKind.video => '视频生成模式（点按切换）',
+                          null => '对话模式（点按切换到图片/视频生成）',
+                        },
+                        onTap: widget.isStreaming
+                            ? null
+                            : () => widget.onMediaKindChanged!(
+                                switch (widget.mediaKind) {
+                                  null => MediaKind.image,
+                                  MediaKind.image => MediaKind.video,
+                                  MediaKind.video => null,
+                                },
+                              ),
+                      ),
+                    ],
                     if (widget.onOpenGenOptions != null) ...[
                       const SizedBox(width: 6),
                       _RoundIconButton(
@@ -249,6 +300,10 @@ class _ChatInputState extends State<ChatInput> {
                                   focusedBorder: InputBorder.none,
                                   hintText: widget.isStreaming
                                       ? '生成中…'
+                                      : widget.mediaKind == MediaKind.image
+                                      ? '描述要生成的图片（附图则为编辑）…'
+                                      : widget.mediaKind == MediaKind.video
+                                      ? '描述要生成的视频…'
                                       : (widget.sendWithEnter
                                             ? '输入消息…'
                                             : '输入消息… ⌘/Ctrl+Enter 发送'),

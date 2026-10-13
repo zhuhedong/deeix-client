@@ -9,7 +9,7 @@ A native, cross-platform **Flutter client for the DEEIX‑Chat API** — a fast,
 ![Dart](https://img.shields.io/badge/Dart-3.12-0175C2?logo=dart)
 ![Platforms](https://img.shields.io/badge/platforms-Android%20%7C%20iOS-informational)
 
-> Unofficial, community‑built client. It **only calls** the DEEIX‑Chat HTTP API (calibrated to **v0.3.3**) and does **not** modify or ship any backend. You bring your own deployed server.
+> Unofficial, community‑built client. It **only calls** the DEEIX‑Chat HTTP API (calibrated to **v0.4.4**) and does **not** modify or ship any backend. You bring your own deployed server.
 
 ---
 
@@ -39,6 +39,15 @@ A native, cross-platform **Flutter client for the DEEIX‑Chat API** — a fast,
 **Personalization**
 - “Graphite + Electric Indigo” design system, light / dark
 - **In‑app configurable server address**, font scale, bubble density, English / 中文
+
+
+**New in this release (DEEIX‑Chat 0.4.4)**
+- Knowledge bases: browse built‑in / personal ones, create, upload or add files, pick up to 8 per chat for retrieval
+- Personal model providers (bring your own API key): probe, choose models, enable/disable, rotate key
+- Image / video generation mode in chat (image edit when an image is attached)
+- Temporary (unsaved) chat
+- Message delete, fork to a new conversation, conversation labels, server full‑text search
+- Account security: TOTP two‑factor setup / disable / recovery codes; 14‑day activity chart
 
 ---
 
@@ -152,11 +161,33 @@ Generated files (`*.g.dart`, `*.freezed.dart`) are committed so the app builds w
 
 ## 🔌 API compatibility
 
-Calibrated to **DEEIX‑Chat API v0.3.3**. Highlights:
+Calibrated to **DEEIX‑Chat API v0.4.4**. Highlights:
 - Unified envelope `{ "data": T, "errorMsg": "" }`
 - Access token via `Authorization: Bearer …`; refresh token in an HttpOnly cookie (handled by the cookie jar)
 - Streaming: `POST …/messages/stream` returning `application/x-ndjson`
 - Conversation ids are **publicID** strings (not numeric)
+
+---
+
+
+## 🚀 Releasing & in‑app updates
+
+1. Bump `version:` in `pubspec.yaml` (e.g. `1.2.0+3`) and merge to `main`.
+2. Tag and push: `git tag v1.2.0 && git push --tags`
+3. The **Release** workflow builds split‑per‑ABI APKs (`arm64-v8a`, `armeabi-v7a`, `x86_64`) plus a universal APK, writes `SHA256SUMS.txt`, and publishes a GitHub Release. Tags with a suffix (`v1.2.0-beta.1`) become pre‑releases and are **not** offered to users.
+
+The app checks `releases/latest` of `zhuhedong/deeix-client` (see `UpdateConfig` in `lib/features/update/data/update_service.dart`) at most once every 24 h on launch, and on demand from **Settings › 检查更新**. On Android it downloads the APK for the device ABI (fallback universal), verifies size + SHA‑256, then opens the system installer (the user must allow “install unknown apps” once). iOS only opens the release page.
+
+**Signing secrets** (Settings › Secrets and variables › Actions):
+
+| Secret | Value |
+|---|---|
+| `ANDROID_KEYSTORE_BASE64` | `base64 -w0 release.jks` |
+| `ANDROID_KEYSTORE_PASSWORD` | keystore password |
+| `ANDROID_KEY_ALIAS` | key alias |
+| `ANDROID_KEY_PASSWORD` | key password |
+
+> ⚠️ Without these the release is **debug‑signed** with a key that changes between CI runs. Android refuses to update an app whose signature changed, so in‑app updates only work reliably once a fixed release keystore is configured. Create one with `keytool -genkey -v -keystore release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias deeix` and keep it safe — losing it means users must uninstall to update.
 
 ---
 

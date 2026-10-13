@@ -13,6 +13,7 @@ import '../../../shared/widgets/ui_kit.dart';
 import '../../auth/presentation/auth_controller.dart';
 import '../../auth/presentation/widgets/server_url_dialog.dart';
 import '../../models/data/models_repository.dart';
+import '../../update/presentation/update_dialog.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -195,6 +196,24 @@ class SettingsPage extends ConsumerWidget {
                 onTap: () => context.push('/files'),
               ),
               ListTile(
+                leading: const Icon(Icons.library_books_outlined),
+                title: const Text('知识库'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => context.push('/knowledge-bases'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.hub_outlined),
+                title: const Text('我的模型服务'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => context.push('/model-providers'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.shield_outlined),
+                title: const Text('账户安全（两步验证）'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => context.push('/security'),
+              ),
+              ListTile(
                 leading: const Icon(Icons.devices_other_rounded),
                 title: const Text('活跃设备'),
                 trailing: const Icon(Icons.chevron_right_rounded),
@@ -254,6 +273,18 @@ class SettingsPage extends ConsumerWidget {
               ),
               FutureBuilder<PackageInfo>(
                 future: PackageInfo.fromPlatform(),
+                builder: (context, snap) => ListTile(
+                  leading: const Icon(Icons.system_update_outlined),
+                  title: const Text('检查更新'),
+                  subtitle: Text(
+                    snap.hasData ? '当前版本 ${snap.data!.version}' : '当前版本 …',
+                  ),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => runUpdateCheck(context, ref, manual: true),
+                ),
+              ),
+              FutureBuilder<PackageInfo>(
+                future: PackageInfo.fromPlatform(),
                 builder: (context, snap) {
                   final v = snap.data;
                   return ListTile(
@@ -262,7 +293,7 @@ class SettingsPage extends ConsumerWidget {
                     subtitle: Text(
                       v == null
                           ? 'DEEIX'
-                          : '${v.appName} ${v.version}+${v.buildNumber}  ·  API 0.3.3',
+                          : '${v.appName} ${v.version}+${v.buildNumber}  ·  API 0.4.4',
                     ),
                   );
                 },

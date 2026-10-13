@@ -15,6 +15,7 @@ import 'dart:convert';
 import '../../../shared/models/mcp_tool.dart';
 import '../../../shared/widgets/ui_kit.dart';
 import '../../conversation/presentation/conversation_drawer.dart';
+import '../../knowledge/data/knowledge_repository.dart';
 import '../../models/data/models_repository.dart';
 import '../../prompt/data/prompt_repository.dart';
 import '../../tools/data/tools_repository.dart';
@@ -115,6 +116,54 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                       .regenerate();
                 },
               ),
+            if (message.canFork)
+              ListTile(
+                leading: const Icon(Icons.call_split_rounded),
+                title: const Text('从这里分支出新对话'),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  final id = await ref
+                      .read(
+                        chatControllerProvider(widget.conversationId).notifier,
+                      )
+                      .forkFromMessage(message.messageId);
+                  if (id != null && mounted) context.push('/chat/$id');
+                },
+              ),
+            if (message.canDelete)
+              ListTile(
+                leading: const Icon(Icons.delete_outline_rounded),
+                title: const Text('删除这条消息'),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  final ok = await showDialog<bool>(
+                    context: context,
+                    builder: (c) => AlertDialog(
+                      title: const Text('删除消息'),
+                      content: const Text('删除后无法恢复，确定删除？'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(c, false),
+                          child: const Text('取消'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(c, true),
+                          child: const Text('删除'),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (ok == true) {
+                    await ref
+                        .read(
+                          chatControllerProvider(
+                            widget.conversationId,
+                          ).notifier,
+                        )
+                        .deleteMessage(message.messageId);
+                  }
+                },
+              ),
             if (message.canRetry)
               ListTile(
                 leading: const Icon(Icons.replay),
@@ -132,6 +181,21 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _pickKnowledgeBases() async {
+    final notifier = ref.read(
+      chatControllerProvider(widget.conversationId).notifier,
+    );
+    final current = ref
+        .read(chatControllerProvider(widget.conversationId))
+        .selectedKnowledgeBaseIds;
+    final chosen = await showModalBottomSheet<Set<String>>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => _KnowledgePickerSheet(initial: current),
+    );
+    if (chosen != null) notifier.setKnowledgeBases(chosen);
   }
 
   Future<void> _editMessage(String id, String content) async {
@@ -681,6 +745,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                                 isLastAssistant && !state.isStreaming,
                             canRetry: m.error != null && !state.isStreaming,
                             canEdit: isUser && !state.isStreaming,
+                            canDelete: !state.isStreaming && !m.isStreaming,
+                            canFork:
+                                !state.isStreaming &&
+                                !m.id.startsWith('local-'),
                           ),
                         ),
                       );
@@ -714,6 +782,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             onPickImage: _pick,
             onPickFiles: _pickFiles,
             onRemoveAttachment: notifier.removeAttachmentAt,
+            knowledgeCount: state.selectedKnowledgeBaseIds.length,
+            onOpenKnowledge: _pickKnowledgeBases,
+            mediaKind: state.mediaKind,
+            onMediaKindChanged: notifier.setMediaKind,
           ),
         ],
       ),
@@ -728,11 +800,100 @@ class ChatMessageActions {
     required this.canRegenerate,
     required this.canRetry,
     this.canEdit = false,
+    this.canDelete = false,
+    this.canFork = false,
   });
 
+  final bool canDelete;
+  final bool canFork;
   final String messageId;
   final String content;
   final bool canRegenerate;
   final bool canRetry;
   final bool canEdit;
+}
+
+/// Bottom sheet to choose up to 8 knowledge bases for retrieval.
+class _KnowledgePickerSheet extends ConsumerStatefulWidget {
+  const _KnowledgePickerSheet({required this.initial});
+
+  final Set<String> initial;
+
+  @override
+  ConsumerState<_KnowledgePickerSheet> createState() =>
+      _KnowledgePickerSheetState();
+}
+
+class _KnowledgePickerSheetState extends ConsumerState<_KnowledgePickerSheet> {
+  /// Server limit (`knowledgeBaseIDs` max=8).
+  static const _max = 8;
+  late final Set<String> _sel = {...widget.initial};
+
+  @override
+  Widget build(BuildContext context) {
+    final kbs = ref.watch(visibleKnowledgeBasesProvider);
+    return SafeArea(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.7,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: const Text('选择知识库'),
+              subtitle: Text('已选 ${_sel.length} / 最多 $_max 个'),
+              trailing: TextButton(
+                onPressed: () => Navigator.pop(context, _sel),
+                child: const Text('完成'),
+              ),
+            ),
+            const Divider(height: 1),
+            Flexible(
+              child: kbs.when(
+                loading: () => const Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+                error: (e, _) => Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text('$e'),
+                ),
+                data: (items) {
+                  final usable = items.where((k) => k.enabled).toList();
+                  if (usable.isEmpty) {
+                    return const Padding(
+                      padding: EdgeInsets.all(24),
+                      child: Text('暂无可用知识库，可在「设置 › 知识库」中创建。'),
+                    );
+                  }
+                  return ListView(
+                    shrinkWrap: true,
+                    children: [
+                      for (final kb in usable)
+                        CheckboxListTile(
+                          value: _sel.contains(kb.publicID),
+                          title: Text(kb.name),
+                          subtitle: Text(
+                            '${kb.isMine ? '我的' : '内置'} · '
+                            '${kb.readyFileCount} 个文件就绪',
+                          ),
+                          onChanged: (v) => setState(() {
+                            if (v == true) {
+                              if (_sel.length < _max) _sel.add(kb.publicID);
+                            } else {
+                              _sel.remove(kb.publicID);
+                            }
+                          }),
+                        ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

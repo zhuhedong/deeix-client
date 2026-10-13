@@ -10,6 +10,23 @@ class BillingRepository {
   BillingRepository(this._dio);
   final Dio _dio;
 
+  /// GET /user/stats/activity?days= (DEEIX-Chat 0.4.4+).
+  Future<List<DailyActivity>> activity({int days = 30}) async {
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.userActivity,
+        queryParameters: {'days': days},
+      );
+      final data = ApiEnvelope.unwrap(response);
+      return (data is List ? data : const [])
+          .whereType<Map>()
+          .map((e) => DailyActivity.fromApi(Map<String, dynamic>.from(e)))
+          .toList();
+    } on DioException catch (e) {
+      throw ApiException.fromDio(e);
+    }
+  }
+
   Future<BillingAccount> account() async {
     try {
       final response = await _dio.get(ApiEndpoints.billingAccount);

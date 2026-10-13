@@ -16,7 +16,8 @@ T _$identity<T>(T value) => value;
 mixin _$Conversation {
 
 /// API path id — ConversationResponse.publicID
- String get publicID; String? get title; String? get model; String? get status; bool get isStarred; int? get messageCount; DateTime? get updatedAt; DateTime? get createdAt; String? get projectID; String? get projectName;
+ String get publicID; String? get title; String? get model; String? get status; bool get isStarred; int? get messageCount; DateTime? get updatedAt; DateTime? get createdAt; String? get projectID; String? get projectName;/// Conversation labels (DEEIX-Chat 0.4.4+, from `labelsJSON`).
+ List<String> get labels;
 /// Create a copy of Conversation
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,16 +30,16 @@ $ConversationCopyWith<Conversation> get copyWith => _$ConversationCopyWithImpl<C
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Conversation&&(identical(other.publicID, publicID) || other.publicID == publicID)&&(identical(other.title, title) || other.title == title)&&(identical(other.model, model) || other.model == model)&&(identical(other.status, status) || other.status == status)&&(identical(other.isStarred, isStarred) || other.isStarred == isStarred)&&(identical(other.messageCount, messageCount) || other.messageCount == messageCount)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.projectID, projectID) || other.projectID == projectID)&&(identical(other.projectName, projectName) || other.projectName == projectName));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Conversation&&(identical(other.publicID, publicID) || other.publicID == publicID)&&(identical(other.title, title) || other.title == title)&&(identical(other.model, model) || other.model == model)&&(identical(other.status, status) || other.status == status)&&(identical(other.isStarred, isStarred) || other.isStarred == isStarred)&&(identical(other.messageCount, messageCount) || other.messageCount == messageCount)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.projectID, projectID) || other.projectID == projectID)&&(identical(other.projectName, projectName) || other.projectName == projectName)&&const DeepCollectionEquality().equals(other.labels, labels));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,publicID,title,model,status,isStarred,messageCount,updatedAt,createdAt,projectID,projectName);
+int get hashCode => Object.hash(runtimeType,publicID,title,model,status,isStarred,messageCount,updatedAt,createdAt,projectID,projectName,const DeepCollectionEquality().hash(labels));
 
 @override
 String toString() {
-  return 'Conversation(publicID: $publicID, title: $title, model: $model, status: $status, isStarred: $isStarred, messageCount: $messageCount, updatedAt: $updatedAt, createdAt: $createdAt, projectID: $projectID, projectName: $projectName)';
+  return 'Conversation(publicID: $publicID, title: $title, model: $model, status: $status, isStarred: $isStarred, messageCount: $messageCount, updatedAt: $updatedAt, createdAt: $createdAt, projectID: $projectID, projectName: $projectName, labels: $labels)';
 }
 
 
@@ -49,7 +50,7 @@ abstract mixin class $ConversationCopyWith<$Res>  {
   factory $ConversationCopyWith(Conversation value, $Res Function(Conversation) _then) = _$ConversationCopyWithImpl;
 @useResult
 $Res call({
- String publicID, String? title, String? model, String? status, bool isStarred, int? messageCount, DateTime? updatedAt, DateTime? createdAt, String? projectID, String? projectName
+ String publicID, String? title, String? model, String? status, bool isStarred, int? messageCount, DateTime? updatedAt, DateTime? createdAt, String? projectID, String? projectName, List<String> labels
 });
 
 
@@ -66,7 +67,7 @@ class _$ConversationCopyWithImpl<$Res>
 
 /// Create a copy of Conversation
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? publicID = null,Object? title = freezed,Object? model = freezed,Object? status = freezed,Object? isStarred = null,Object? messageCount = freezed,Object? updatedAt = freezed,Object? createdAt = freezed,Object? projectID = freezed,Object? projectName = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? publicID = null,Object? title = freezed,Object? model = freezed,Object? status = freezed,Object? isStarred = null,Object? messageCount = freezed,Object? updatedAt = freezed,Object? createdAt = freezed,Object? projectID = freezed,Object? projectName = freezed,Object? labels = null,}) {
   return _then(_self.copyWith(
 publicID: null == publicID ? _self.publicID : publicID // ignore: cast_nullable_to_non_nullable
 as String,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
@@ -78,7 +79,8 @@ as int?,updatedAt: freezed == updatedAt ? _self.updatedAt : updatedAt // ignore:
 as DateTime?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,projectID: freezed == projectID ? _self.projectID : projectID // ignore: cast_nullable_to_non_nullable
 as String?,projectName: freezed == projectName ? _self.projectName : projectName // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,labels: null == labels ? _self.labels : labels // ignore: cast_nullable_to_non_nullable
+as List<String>,
   ));
 }
 
@@ -163,10 +165,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String publicID,  String? title,  String? model,  String? status,  bool isStarred,  int? messageCount,  DateTime? updatedAt,  DateTime? createdAt,  String? projectID,  String? projectName)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String publicID,  String? title,  String? model,  String? status,  bool isStarred,  int? messageCount,  DateTime? updatedAt,  DateTime? createdAt,  String? projectID,  String? projectName,  List<String> labels)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Conversation() when $default != null:
-return $default(_that.publicID,_that.title,_that.model,_that.status,_that.isStarred,_that.messageCount,_that.updatedAt,_that.createdAt,_that.projectID,_that.projectName);case _:
+return $default(_that.publicID,_that.title,_that.model,_that.status,_that.isStarred,_that.messageCount,_that.updatedAt,_that.createdAt,_that.projectID,_that.projectName,_that.labels);case _:
   return orElse();
 
 }
@@ -184,10 +186,10 @@ return $default(_that.publicID,_that.title,_that.model,_that.status,_that.isStar
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String publicID,  String? title,  String? model,  String? status,  bool isStarred,  int? messageCount,  DateTime? updatedAt,  DateTime? createdAt,  String? projectID,  String? projectName)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String publicID,  String? title,  String? model,  String? status,  bool isStarred,  int? messageCount,  DateTime? updatedAt,  DateTime? createdAt,  String? projectID,  String? projectName,  List<String> labels)  $default,) {final _that = this;
 switch (_that) {
 case _Conversation():
-return $default(_that.publicID,_that.title,_that.model,_that.status,_that.isStarred,_that.messageCount,_that.updatedAt,_that.createdAt,_that.projectID,_that.projectName);case _:
+return $default(_that.publicID,_that.title,_that.model,_that.status,_that.isStarred,_that.messageCount,_that.updatedAt,_that.createdAt,_that.projectID,_that.projectName,_that.labels);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -204,10 +206,10 @@ return $default(_that.publicID,_that.title,_that.model,_that.status,_that.isStar
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String publicID,  String? title,  String? model,  String? status,  bool isStarred,  int? messageCount,  DateTime? updatedAt,  DateTime? createdAt,  String? projectID,  String? projectName)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String publicID,  String? title,  String? model,  String? status,  bool isStarred,  int? messageCount,  DateTime? updatedAt,  DateTime? createdAt,  String? projectID,  String? projectName,  List<String> labels)?  $default,) {final _that = this;
 switch (_that) {
 case _Conversation() when $default != null:
-return $default(_that.publicID,_that.title,_that.model,_that.status,_that.isStarred,_that.messageCount,_that.updatedAt,_that.createdAt,_that.projectID,_that.projectName);case _:
+return $default(_that.publicID,_that.title,_that.model,_that.status,_that.isStarred,_that.messageCount,_that.updatedAt,_that.createdAt,_that.projectID,_that.projectName,_that.labels);case _:
   return null;
 
 }
@@ -219,7 +221,7 @@ return $default(_that.publicID,_that.title,_that.model,_that.status,_that.isStar
 @JsonSerializable()
 
 class _Conversation extends Conversation {
-  const _Conversation({required this.publicID, this.title, this.model, this.status, this.isStarred = false, this.messageCount, this.updatedAt, this.createdAt, this.projectID, this.projectName}): super._();
+  const _Conversation({required this.publicID, this.title, this.model, this.status, this.isStarred = false, this.messageCount, this.updatedAt, this.createdAt, this.projectID, this.projectName, final  List<String> labels = const <String>[]}): _labels = labels,super._();
   factory _Conversation.fromJson(Map<String, dynamic> json) => _$ConversationFromJson(json);
 
 /// API path id — ConversationResponse.publicID
@@ -233,6 +235,15 @@ class _Conversation extends Conversation {
 @override final  DateTime? createdAt;
 @override final  String? projectID;
 @override final  String? projectName;
+/// Conversation labels (DEEIX-Chat 0.4.4+, from `labelsJSON`).
+ final  List<String> _labels;
+/// Conversation labels (DEEIX-Chat 0.4.4+, from `labelsJSON`).
+@override@JsonKey() List<String> get labels {
+  if (_labels is EqualUnmodifiableListView) return _labels;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_labels);
+}
+
 
 /// Create a copy of Conversation
 /// with the given fields replaced by the non-null parameter values.
@@ -247,16 +258,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Conversation&&(identical(other.publicID, publicID) || other.publicID == publicID)&&(identical(other.title, title) || other.title == title)&&(identical(other.model, model) || other.model == model)&&(identical(other.status, status) || other.status == status)&&(identical(other.isStarred, isStarred) || other.isStarred == isStarred)&&(identical(other.messageCount, messageCount) || other.messageCount == messageCount)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.projectID, projectID) || other.projectID == projectID)&&(identical(other.projectName, projectName) || other.projectName == projectName));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Conversation&&(identical(other.publicID, publicID) || other.publicID == publicID)&&(identical(other.title, title) || other.title == title)&&(identical(other.model, model) || other.model == model)&&(identical(other.status, status) || other.status == status)&&(identical(other.isStarred, isStarred) || other.isStarred == isStarred)&&(identical(other.messageCount, messageCount) || other.messageCount == messageCount)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.projectID, projectID) || other.projectID == projectID)&&(identical(other.projectName, projectName) || other.projectName == projectName)&&const DeepCollectionEquality().equals(other._labels, _labels));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,publicID,title,model,status,isStarred,messageCount,updatedAt,createdAt,projectID,projectName);
+int get hashCode => Object.hash(runtimeType,publicID,title,model,status,isStarred,messageCount,updatedAt,createdAt,projectID,projectName,const DeepCollectionEquality().hash(_labels));
 
 @override
 String toString() {
-  return 'Conversation(publicID: $publicID, title: $title, model: $model, status: $status, isStarred: $isStarred, messageCount: $messageCount, updatedAt: $updatedAt, createdAt: $createdAt, projectID: $projectID, projectName: $projectName)';
+  return 'Conversation(publicID: $publicID, title: $title, model: $model, status: $status, isStarred: $isStarred, messageCount: $messageCount, updatedAt: $updatedAt, createdAt: $createdAt, projectID: $projectID, projectName: $projectName, labels: $labels)';
 }
 
 
@@ -267,7 +278,7 @@ abstract mixin class _$ConversationCopyWith<$Res> implements $ConversationCopyWi
   factory _$ConversationCopyWith(_Conversation value, $Res Function(_Conversation) _then) = __$ConversationCopyWithImpl;
 @override @useResult
 $Res call({
- String publicID, String? title, String? model, String? status, bool isStarred, int? messageCount, DateTime? updatedAt, DateTime? createdAt, String? projectID, String? projectName
+ String publicID, String? title, String? model, String? status, bool isStarred, int? messageCount, DateTime? updatedAt, DateTime? createdAt, String? projectID, String? projectName, List<String> labels
 });
 
 
@@ -284,7 +295,7 @@ class __$ConversationCopyWithImpl<$Res>
 
 /// Create a copy of Conversation
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? publicID = null,Object? title = freezed,Object? model = freezed,Object? status = freezed,Object? isStarred = null,Object? messageCount = freezed,Object? updatedAt = freezed,Object? createdAt = freezed,Object? projectID = freezed,Object? projectName = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? publicID = null,Object? title = freezed,Object? model = freezed,Object? status = freezed,Object? isStarred = null,Object? messageCount = freezed,Object? updatedAt = freezed,Object? createdAt = freezed,Object? projectID = freezed,Object? projectName = freezed,Object? labels = null,}) {
   return _then(_Conversation(
 publicID: null == publicID ? _self.publicID : publicID // ignore: cast_nullable_to_non_nullable
 as String,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
@@ -296,7 +307,8 @@ as int?,updatedAt: freezed == updatedAt ? _self.updatedAt : updatedAt // ignore:
 as DateTime?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,projectID: freezed == projectID ? _self.projectID : projectID // ignore: cast_nullable_to_non_nullable
 as String?,projectName: freezed == projectName ? _self.projectName : projectName // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,labels: null == labels ? _self._labels : labels // ignore: cast_nullable_to_non_nullable
+as List<String>,
   ));
 }
 

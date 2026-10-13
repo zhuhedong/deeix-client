@@ -10,6 +10,9 @@ import '../data/auth_repository.dart';
 import 'auth_controller.dart';
 import 'widgets/server_url_dialog.dart';
 
+/// Set to true once SSO is adapted to the 0.4.4 provider auth bridge.
+const bool _kShowSsoEntry = false;
+
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
@@ -144,8 +147,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         onPressed: () => context.push('/password-reset'),
                         child: Text(l10n.forgotPassword),
                       ),
-                    if ((options.asData?.value.providers ?? const [])
-                        .isNotEmpty) ...[
+                    // SSO entry hidden: the legacy `/auth/providers/{slug}/start`
+                    // flow this client uses was removed in DEEIX-Chat 0.4.4.
+                    // Username/password login is the supported path.
+                    if (_kShowSsoEntry &&
+                        (options.asData?.value.providers ?? const [])
+                            .isNotEmpty) ...[
                       const SizedBox(height: 20),
                       Row(
                         children: [

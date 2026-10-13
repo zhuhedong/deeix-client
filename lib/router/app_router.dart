@@ -7,14 +7,19 @@ import '../features/auth/presentation/login_page.dart';
 import '../features/auth/presentation/password_reset_page.dart';
 import '../features/auth/presentation/profile_page.dart';
 import '../features/auth/presentation/register_page.dart';
+import '../features/auth/presentation/security_page.dart';
 import '../features/auth/presentation/sessions_page.dart';
 import '../features/auth/presentation/two_factor_page.dart';
 import '../features/billing/presentation/billing_page.dart';
 import '../features/chat/presentation/chat_page.dart';
 import '../features/file/presentation/files_page.dart';
+import '../features/knowledge/presentation/knowledge_bases_page.dart';
+import '../features/model_provider/presentation/model_providers_page.dart';
 import '../features/project/presentation/projects_page.dart';
 import '../features/search/presentation/search_page.dart';
 import '../features/settings/presentation/settings_page.dart';
+import '../features/temporary_chat/presentation/temporary_chat_page.dart';
+import '../features/update/presentation/update_dialog.dart';
 import '../shared/widgets/loading_view.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -88,7 +93,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             );
             if (status == AuthStatus.authenticated) {
               // Home opens straight into a fresh draft chat ('' = new session).
-              return const ChatPage(conversationId: '');
+              return const StartupUpdateCheck(
+                child: ChatPage(conversationId: ''),
+              );
             }
             // unknown → restoring; unauthenticated/twoFactor → redirect will
             // move us to /login or /two-factor momentarily.
@@ -130,6 +137,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'search',
             builder: (context, state) => const SearchPage(),
+          ),
+          GoRoute(
+            path: 'knowledge-bases',
+            builder: (context, state) => const KnowledgeBasesPage(),
+          ),
+          GoRoute(
+            path: 'model-providers',
+            builder: (context, state) => const ModelProvidersPage(),
+          ),
+          GoRoute(
+            path: 'security',
+            builder: (context, state) => const SecurityPage(),
+          ),
+          GoRoute(
+            path: 'temporary-chat',
+            builder: (context, state) => const TemporaryChatPage(),
           ),
         ],
       ),

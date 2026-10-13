@@ -55,6 +55,58 @@ class ApiEndpoints {
   static String runStream(String runId) => '/conversation-runs/$runId/stream';
   static String runCancel(String runId) => '/conversation-runs/$runId/cancel';
 
+  // DEEIX-Chat 0.4.4+: conversation search, labels, message delete / fork.
+  static const String conversationSearch = '/conversations/search';
+  static String conversationLabels(String publicId) =>
+      '/conversations/$publicId/labels';
+  static String conversationMessage(String publicId, String messageId) =>
+      '/conversations/$publicId/messages/$messageId';
+  static String conversationMessageFork(String publicId, String messageId) =>
+      '/conversations/$publicId/messages/$messageId/fork';
+
+  // DEEIX-Chat 0.4.4+: media generation (NDJSON streams).
+  static String mediaImageGenerationStream(String publicId) =>
+      '/conversations/$publicId/media/images/generations/stream';
+  static String mediaImageEditStream(String publicId) =>
+      '/conversations/$publicId/media/images/edits/stream';
+  static String mediaVideoGenerationStream(String publicId) =>
+      '/conversations/$publicId/media/videos/generations/stream';
+
+  // DEEIX-Chat 0.4.4+: temporary (unsaved) chat.
+  static const String temporaryChatStream = '/temporary-chat/messages/stream';
+
+  // DEEIX-Chat 0.4.4+: knowledge bases.
+  static const String knowledgeBases = '/knowledge-bases';
+  static const String myKnowledgeBases = '/knowledge-bases/mine';
+  static String myKnowledgeBase(String id) => '/knowledge-bases/mine/$id';
+  static String knowledgeBaseFiles(String id) => '/knowledge-bases/$id/files';
+  static String myKnowledgeBaseFiles(String id) =>
+      '/knowledge-bases/mine/$id/files';
+  static String myKnowledgeBaseFile(String id, String fileId) =>
+      '/knowledge-bases/mine/$id/files/$fileId';
+  static String myKnowledgeBaseAvailableFiles(String id) =>
+      '/knowledge-bases/mine/$id/available-files';
+
+  // DEEIX-Chat 0.4.4+: personal model providers (bring your own key).
+  static const String modelProviders = '/me/model-providers';
+  static const String modelProvidersAccess = '/me/model-providers/access';
+  static const String modelProvidersProbe = '/me/model-providers/probe';
+  static String modelProvider(String id) => '/me/model-providers/$id';
+  static String modelProviderModels(String id) =>
+      '/me/model-providers/$id/models';
+
+  // DEEIX-Chat 0.4.4+: account two-factor management.
+  static const String twoFactorStatus = '/me/2fa';
+  static const String twoFactorSetup = '/me/2fa/setup';
+  static const String twoFactorSetupStart = '/me/2fa/setup/start';
+  static const String twoFactorSetupConfirm = '/me/2fa/setup/confirm';
+  static const String twoFactorDisable = '/me/2fa/disable';
+  static const String twoFactorRecoveryRegenerate =
+      '/me/2fa/recovery/regenerate';
+
+  // DEEIX-Chat 0.4.4+: daily usage activity.
+  static const String userActivity = '/user/stats/activity';
+
   // Messages
   static String message(String publicId) => '/messages/$publicId';
   static String messageFeedback(String publicId) =>
