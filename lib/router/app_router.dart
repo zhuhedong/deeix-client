@@ -19,6 +19,7 @@ import '../features/project/presentation/projects_page.dart';
 import '../features/search/presentation/search_page.dart';
 import '../features/settings/presentation/settings_page.dart';
 import '../features/temporary_chat/presentation/temporary_chat_page.dart';
+import '../features/update/presentation/update_dialog.dart';
 import '../shared/widgets/loading_view.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -92,7 +93,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             );
             if (status == AuthStatus.authenticated) {
               // Home opens straight into a fresh draft chat ('' = new session).
-              return const ChatPage(conversationId: '');
+              return const StartupUpdateCheck(
+                child: ChatPage(conversationId: ''),
+              );
             }
             // unknown → restoring; unauthenticated/twoFactor → redirect will
             // move us to /login or /two-factor momentarily.

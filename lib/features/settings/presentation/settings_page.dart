@@ -13,6 +13,7 @@ import '../../../shared/widgets/ui_kit.dart';
 import '../../auth/presentation/auth_controller.dart';
 import '../../auth/presentation/widgets/server_url_dialog.dart';
 import '../../models/data/models_repository.dart';
+import '../../update/presentation/update_dialog.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -269,6 +270,18 @@ class SettingsPage extends ConsumerWidget {
                 title: Text(l10n.terms),
                 trailing: const Icon(Icons.open_in_new_rounded, size: 18),
                 onTap: () => _openUrl('$serverUrl/terms'),
+              ),
+              FutureBuilder<PackageInfo>(
+                future: PackageInfo.fromPlatform(),
+                builder: (context, snap) => ListTile(
+                  leading: const Icon(Icons.system_update_outlined),
+                  title: const Text('检查更新'),
+                  subtitle: Text(
+                    snap.hasData ? '当前版本 ${snap.data!.version}' : '当前版本 …',
+                  ),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => runUpdateCheck(context, ref, manual: true),
+                ),
               ),
               FutureBuilder<PackageInfo>(
                 future: PackageInfo.fromPlatform(),
