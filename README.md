@@ -11,7 +11,7 @@ A native, cross-platform **Flutter client for the DEEIX‑Chat API** — a fast,
 
 > Unofficial, community‑built client. It **only calls** the DEEIX‑Chat HTTP API (calibrated to **v0.4.4**) and does **not** modify or ship any backend. You bring your own deployed server.
 
-**Current version: v1.1.0** (`1.1.0+2`), adapted to the DEEIX‑Chat **v0.4.4** backend.
+**Current version: v1.1.1** (`1.1.1+3`), adapted to the DEEIX‑Chat **v0.4.4** backend.
 
 ## 📥 Download
 
