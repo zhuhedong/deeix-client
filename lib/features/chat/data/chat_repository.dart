@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,6 +14,9 @@ import '../../../shared/models/message.dart';
 export '../../../core/utils/export_transcript.dart' show messagesToMarkdown;
 export '../../../core/utils/stream_events.dart'
     show StreamChunk, messageFeedbackBody;
+
+/// Media generation task kind.
+enum MediaKind { image, video }
 
 class ChatRepository {
   ChatRepository(this._dio);
@@ -73,11 +75,12 @@ class ChatRepository {
     String? sourceMessagePublicID,
     Map<String, dynamic>? options,
     List<int>? selectedToolIds,
+    List<String>? knowledgeBaseIds,
     CancelToken? cancelToken,
-  }) async* {
-    final response = await _dio.post<ResponseBody>(
+  }) {
+    return postNdjson(
       ApiEndpoints.conversationMessageStream(conversationPublicId),
-      data: {
+      {
         'content': content,
         'contentType': contentType,
         'model': ?model,
@@ -89,34 +92,89 @@ class ChatRepository {
         if (options != null && options.isNotEmpty) 'options': options,
         if (selectedToolIds != null && selectedToolIds.isNotEmpty)
           'selectedToolIDs': selectedToolIds,
+        if (knowledgeBaseIds != null && knowledgeBaseIds.isNotEmpty)
+          'knowledgeBaseIDs': knowledgeBaseIds,
       },
-      options: Options(
-        responseType: ResponseType.stream,
-        receiveTimeout: AppConfig.streamReceiveTimeout,
-        headers: {
-          'Accept': 'application/x-ndjson, application/json, */*',
-          'Content-Type': 'application/json',
-        },
-      ),
       cancelToken: cancelToken,
     );
+  }
 
-    final status = response.statusCode ?? 0;
-    if (status >= 400) {
-      final body = response.data;
-      var msg = '流式请求失败 ($status)';
-      if (body != null) {
-        try {
-          final bytes = await body.stream.fold<List<int>>(
-            <int>[],
-            (p, e) => p..addAll(e),
-          );
-          final text = utf8.decode(bytes, allowMalformed: true);
-          final decoded = jsonDecode(text);
-          msg = ApiEnvelope.errorMsgOf(decoded) ?? text;
-        } catch (_) {}
-      }
-      throw ApiException(message: msg, statusCode: status);
+  /// POST /conversations/{id}/media/{images|videos}/generations/stream
+  /// (DEEIX-Chat 0.4.4+). Same NDJSON protocol as [streamMessage]; the final
+  /// `completed` assistant message carries the generated media attachments.
+  Stream<StreamChunk> streamMediaGeneration({
+    required String conversationPublicId,
+    required MediaKind kind,
+    required String prompt,
+    String? model,
+    List<String>? fileIds,
+    String? clientRunId,
+    String? parentMessagePublicID,
+    CancelToken? cancelToken,
+  }) {
+    final path = kind == MediaKind.video
+        ? ApiEndpoints.mediaVideoGenerationStream(conversationPublicId)
+        : (fileIds != null && fileIds.isNotEmpty)
+        ? ApiEndpoints.mediaImageEditStream(conversationPublicId)
+        : ApiEndpoints.mediaImageGenerationStream(conversationPublicId);
+    return postNdjson(path, {
+      'prompt': prompt,
+      'model': ?model,
+      if (fileIds != null && fileIds.isNotEmpty) 'fileIDs': fileIds,
+      'clientRunID': ?clientRunId,
+      'parentMessagePublicID': ?parentMessagePublicID,
+    }, cancelToken: cancelToken);
+  }
+
+  /// POST /temporary-chat/messages/stream (DEEIX-Chat 0.4.4+).
+  /// Nothing is persisted server-side; the full history is sent each turn.
+  Stream<StreamChunk> streamTemporaryChat({
+    required String sessionId,
+    required String clientRunId,
+    required String model,
+    required List<({String role, String content})> messages,
+    Map<String, dynamic>? options,
+    List<String>? knowledgeBaseIds,
+    CancelToken? cancelToken,
+  }) {
+    return postNdjson(ApiEndpoints.temporaryChatStream, {
+      'sessionID': sessionId,
+      'clientRunID': clientRunId,
+      'model': model,
+      'messages': [
+        for (final m in messages) {'role': m.role, 'content': m.content},
+      ],
+      if (options != null && options.isNotEmpty) 'options': options,
+      if (knowledgeBaseIds != null && knowledgeBaseIds.isNotEmpty)
+        'knowledgeBaseIDs': knowledgeBaseIds,
+    }, cancelToken: cancelToken);
+  }
+
+  /// Shared NDJSON POST: maps events to [StreamChunk]s and surfaces the
+  /// server's error message for non-2xx responses.
+  Stream<StreamChunk> postNdjson(
+    String path,
+    Map<String, dynamic> body, {
+    CancelToken? cancelToken,
+  }) async* {
+    Response<ResponseBody> response;
+    try {
+      response = await _dio.post<ResponseBody>(
+        path,
+        data: body,
+        options: Options(
+          responseType: ResponseType.stream,
+          receiveTimeout: AppConfig.streamReceiveTimeout,
+          headers: {
+            'Accept': 'application/x-ndjson, application/json, */*',
+            'Content-Type': 'application/json',
+          },
+        ),
+        cancelToken: cancelToken,
+      );
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.cancel) rethrow;
+      throw await apiExceptionFromStreamError(e);
     }
 
     final byteStream = response.data?.stream;

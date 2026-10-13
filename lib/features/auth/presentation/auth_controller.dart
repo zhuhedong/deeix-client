@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/network/dio_provider.dart';
 import '../../../shared/models/identity_provider.dart';
 import '../../../shared/models/user.dart';
 import '../data/auth_repository.dart';
@@ -54,6 +55,14 @@ class AuthState {
 class AuthController extends Notifier<AuthState> {
   @override
   AuthState build() {
+    ref.listen<int>(authExpiredProvider, (prev, next) {
+      if (state.status == AuthStatus.authenticated) {
+        state = const AuthState(
+          status: AuthStatus.unauthenticated,
+          error: '登录已过期，请重新登录',
+        );
+      }
+    });
     Future.microtask(bootstrap);
     return const AuthState();
   }

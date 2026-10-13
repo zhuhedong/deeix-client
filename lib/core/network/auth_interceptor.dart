@@ -60,7 +60,18 @@ class AuthInterceptor extends Interceptor {
       return handler.next(err);
     }
 
-    final refreshed = await _refreshToken();
+    // Another request may already have refreshed the token while this one
+    // was in flight with the old one: just replay it with the new token
+    // instead of rotating the refresh cookie again.
+    final sentAuth = '${err.requestOptions.headers['Authorization'] ?? ''}';
+    final current = tokenStorage.accessToken;
+    final alreadyRefreshed =
+        current != null &&
+        current.isNotEmpty &&
+        sentAuth.isNotEmpty &&
+        sentAuth != 'Bearer $current';
+
+    final refreshed = alreadyRefreshed || await _refreshToken();
     if (!refreshed) {
       await tokenStorage.clear();
       onAuthFailure?.call();

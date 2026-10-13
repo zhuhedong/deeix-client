@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 
 /// DEEIX Chat API envelope: `{ "data": T, "errorMsg": "" }`.
@@ -114,4 +116,35 @@ class ApiException implements Exception {
 
   @override
   String toString() => message;
+}
+
+/// Builds an [ApiException] from a failed `ResponseType.stream` request.
+///
+/// With a stream response type Dio leaves the error body as an unread
+/// [ResponseBody], so [ApiException.fromDio] cannot see the server's
+/// `errorMsg`. This drains (a bounded amount of) the body and decodes it.
+Future<ApiException> apiExceptionFromStreamError(DioException e) async {
+  final res = e.response;
+  final body = res?.data;
+  if (res == null || body is! ResponseBody) return ApiException.fromDio(e);
+  final status = res.statusCode;
+  try {
+    final bytes = <int>[];
+    await for (final chunk in body.stream) {
+      bytes.addAll(chunk);
+      if (bytes.length > 64 * 1024) break;
+    }
+    final text = utf8.decode(bytes, allowMalformed: true);
+    final decoded = jsonDecode(text);
+    final msg = ApiEnvelope.errorMsgOf(decoded);
+    return ApiException(
+      message: msg ?? '请求失败 ($status)',
+      statusCode: status,
+      errorCode: ApiEnvelope.errorCodeOf(decoded),
+      details: ApiEnvelope.asMap(decoded)['details'],
+      requestId: ApiEnvelope.asMap(decoded)['requestId'] as String?,
+    );
+  } catch (_) {
+    return ApiException(message: '请求失败 ($status)', statusCode: status);
+  }
 }

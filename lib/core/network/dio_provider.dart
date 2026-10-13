@@ -11,6 +11,20 @@ import '../constants/app_config.dart';
 import '../settings/app_preferences.dart';
 import 'auth_interceptor.dart';
 
+/// Bumped whenever the access token is rejected and cannot be refreshed, so
+/// the auth controller can send the user back to the login screen instead of
+/// leaving every screen failing with 401.
+class AuthExpiredNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void signal() => state++;
+}
+
+final authExpiredProvider = NotifierProvider<AuthExpiredNotifier, int>(
+  AuthExpiredNotifier.new,
+);
+
 final tokenStorageProvider = Provider<TokenStorage>((ref) {
   return TokenStorage();
 });
@@ -62,16 +76,16 @@ final dioReadyProvider = FutureProvider<Dio>((ref) async {
     AuthInterceptor(
       dio: dio,
       tokenStorage: tokenStorage,
-      onAuthFailure: () {
-        // Auth controller listens via session invalidation if needed.
-      },
+      onAuthFailure: () => ref.read(authExpiredProvider.notifier).signal(),
     ),
   );
 
   // Helpful during development; strip for release if noisy.
   assert(() {
     dio.interceptors.add(
-      LogInterceptor(requestBody: true, responseBody: false, error: true),
+      // Never log request bodies: they contain passwords / 2FA codes /
+      // API keys even in debug builds.
+      LogInterceptor(requestBody: false, responseBody: false, error: true),
     );
     return true;
   }());

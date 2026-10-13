@@ -120,6 +120,22 @@ StreamChunk mapStreamEvent(Map<String, dynamic> event) {
     );
   }
 
+  if (type == StreamEventType.moderationBlocked) {
+    final direction = '${event['direction'] ?? ''}';
+    final msg = direction == 'input' ? '消息因内容安全策略被拦截' : '回复因内容安全策略被拦截';
+    return StreamChunk(done: true, error: msg, seq: seq, raw: event);
+  }
+
+  if (type == StreamEventType.mediaStatus) {
+    final message = event['message'];
+    return StreamChunk(
+      processStatus: '${event['status'] ?? 'media'}',
+      fileProcMessage: message is String && message.isNotEmpty ? message : null,
+      seq: seq,
+      raw: event,
+    );
+  }
+
   if (type == StreamEventType.error) {
     final errMsg =
         event['message'] as String? ??

@@ -12,8 +12,14 @@ class NdjsonObjectStream {
 
   /// Feed raw UTF-8 byte chunks; yields decoded JSON maps.
   Stream<Map<String, dynamic>> parse(Stream<List<int>> byteStream) async* {
-    await for (final bytes in byteStream) {
-      _buffer += utf8.decode(bytes, allowMalformed: true);
+    // Decode with a chunked UTF-8 decoder: a multi-byte character (e.g.
+    // Chinese) may be split across network chunks, and decoding each chunk
+    // on its own would corrupt it into U+FFFD.
+    final textStream = byteStream.cast<List<int>>().transform(
+      const Utf8Decoder(allowMalformed: true),
+    );
+    await for (final text in textStream) {
+      _buffer += text;
       final extracted = _extractObjects(_buffer);
       _buffer = extracted.remainder;
       for (final doc in extracted.documents) {
@@ -119,4 +125,8 @@ abstract class StreamEventType {
   static const compactDone = 'compact_done';
   static const mediaStatus = 'media_status';
   static const mediaImageDelta = 'media_image_delta';
+
+  /// Terminal event (DEEIX-Chat 0.4.4+) when content moderation blocks input
+  /// or output.
+  static const moderationBlocked = 'moderation_blocked';
 }

@@ -9,6 +9,7 @@
         android:maxSdkVersion="32"/>
     <application
         android:label="Deeix Client"
+        android:allowBackup="false"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
