@@ -22,6 +22,11 @@ _Conversation _$ConversationFromJson(Map<String, dynamic> json) =>
           : DateTime.parse(json['createdAt'] as String),
       projectID: json['projectID'] as String?,
       projectName: json['projectName'] as String?,
+      labels:
+          (json['labels'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const <String>[],
     );
 
 Map<String, dynamic> _$ConversationToJson(_Conversation instance) =>
@@ -36,4 +41,5 @@ Map<String, dynamic> _$ConversationToJson(_Conversation instance) =>
       'createdAt': instance.createdAt?.toIso8601String(),
       'projectID': instance.projectID,
       'projectName': instance.projectName,
+      'labels': instance.labels,
     };

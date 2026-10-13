@@ -120,3 +120,22 @@ class UsageSummary {
     return const UsageSummary();
   }
 }
+
+/// One day of usage from `GET /user/stats/activity`.
+class DailyActivity {
+  const DailyActivity({
+    required this.date,
+    this.requestCount = 0,
+    this.tokenUsage = 0,
+  });
+
+  final String date;
+  final int requestCount;
+  final int tokenUsage;
+
+  factory DailyActivity.fromApi(Map<String, dynamic> json) => DailyActivity(
+    date: '${json['date'] ?? ''}',
+    requestCount: json['requestCount'] is int ? json['requestCount'] as int : 0,
+    tokenUsage: json['tokenUsage'] is int ? json['tokenUsage'] as int : 0,
+  );
+}
