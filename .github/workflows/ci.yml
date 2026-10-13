@@ -44,6 +44,9 @@ jobs:
       - name: Analyze
         run: flutter analyze
 
+      - name: Test
+        run: flutter test
+
       - name: Build debug APK
         # Debug signing needs no keystore, so CI can build without secrets.
         run: flutter build apk --debug

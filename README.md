@@ -40,6 +40,15 @@ A native, cross-platform **Flutter client for the DEEIX‑Chat API** — a fast,
 - “Graphite + Electric Indigo” design system, light / dark
 - **In‑app configurable server address**, font scale, bubble density, English / 中文
 
+
+**New in this release (DEEIX‑Chat 0.4.4)**
+- Knowledge bases: browse built‑in / personal ones, create, upload or add files, pick up to 8 per chat for retrieval
+- Personal model providers (bring your own API key): probe, choose models, enable/disable, rotate key
+- Image / video generation mode in chat (image edit when an image is attached)
+- Temporary (unsaved) chat
+- Message delete, fork to a new conversation, conversation labels, server full‑text search
+- Account security: TOTP two‑factor setup / disable / recovery codes; 14‑day activity chart
+
 ---
 
 ## 🧱 Tech stack
