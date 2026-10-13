@@ -11,6 +11,21 @@
 
 > 非官方、社区构建的客户端。它**只调用** DEEIX‑Chat 的 HTTP API(已按 **v0.4.4** 校准),**不修改也不包含**任何后端代码 —— 需自备已部署的服务器。
 
+**当前版本：v1.1.0**（`1.1.0+2`），适配 DEEIX‑Chat **v0.4.4** 后端。
+
+## 📥 下载
+
+从 [GitHub Releases](https://github.com/zhuhedong/deeix-client/releases) 下载 APK：
+
+| 文件 | 适用 |
+|---|---|
+| `arm64-v8a` APK | **推荐**，几乎所有现代安卓手机 |
+| `armeabi-v7a` APK | 较老的 32 位设备 |
+| `x86_64` APK | 模拟器 / x86 设备 |
+| 通用(universal) APK | 所有设备（体积更大） |
+
+可用 `SHA256SUMS.txt` 校验（`sha256sum -c SHA256SUMS.txt`）。安装后，App 会从新的 Release 自动更新。
+
 ---
 
 ## ✨ 功能
@@ -32,7 +47,7 @@
 - MCP 工具选择;提示词预设
 
 **账户**
-- 用户名/邮箱登录、二次验证(2FA)、SSO(系统浏览器 + PKCE 的 OIDC/OAuth)
+- 用户名/邮箱 + 密码登录、二次验证(2FA)(登录页的 SSO 入口已隐藏，见 `login_page.dart` 中的 `_kShowSsoEntry`)
 - 注册、找回密码、资料编辑、活跃设备管理
 - 用量与订阅概览、已上传文件管理
 
@@ -41,13 +56,14 @@
 - **应用内可配置服务地址**、字体缩放、气泡密度、中文 / English
 
 
-**本版本新增（适配 DEEIX‑Chat 0.4.4）**
+**v1.1.0 新增（适配 DEEIX‑Chat 0.4.4）**
 - 知识库：浏览内置/个人知识库、新建、上传或添加文件；聊天时最多选 8 个用于检索
 - 我的模型服务（自带 API Key）：检测、选择模型、启用/停用、更换 Key
 - 聊天中的图片 / 视频生成模式（附图时为图片编辑）
 - 临时对话（不保存）
 - 删除消息、从消息分支出新对话、会话标签、服务端全文搜索
 - 账户安全：两步验证（TOTP）开启/关闭/恢复码；近 14 天活跃度图表
+- 通过 GitHub Releases 应用内更新
 
 ---
 
@@ -131,10 +147,11 @@ lib/
 ├── main.dart / app.dart          # 启动、MaterialApp
 ├── core/                         # 网络(dio、拦截器)、认证、设置、常量、工具
 ├── features/                     # 按功能划分的模块
-│   ├── auth/                     # 登录、2FA、SSO、注册、重置、设备、资料
+│   ├── auth/                     # 密码登录、2FA、注册、重置、设备、资料
 │   ├── chat/                     # 流式控制器、聊天页、气泡、输入框
 │   ├── conversation/             # 历史抽屉 + 列表控制器
 │   ├── models/ tools/ prompt/    # 模型列表、MCP 工具、提示词预设
+│   ├── knowledge/ model_provider/ temporary_chat/ update/
 │   ├── file/ project/ billing/ search/ announcement/ settings/
 ├── shared/                       # 主题(设计令牌)、通用组件、模型、国际化
 └── router/                       # go_router 配置
@@ -153,7 +170,7 @@ dart run build_runner build \
   --delete-conflicting-outputs           # 重新生成 *.freezed.dart / *.g.dart
 ```
 
-CI 会在每次 push/PR 运行(`.github/workflows/ci.yml`):格式检查 → `flutter analyze` → 构建 debug APK 并作为产物上传。
+CI 会在推送到 `main`、PR 以及手动触发时运行(`.github/workflows/ci.yml`):格式检查 → `flutter analyze` → 构建 debug APK 并作为产物上传。
 
 生成文件(`*.g.dart`、`*.freezed.dart`)已随仓库提交,克隆后无需先跑代码生成即可构建。
 
@@ -173,8 +190,8 @@ CI 会在每次 push/PR 运行(`.github/workflows/ci.yml`):格式检查 → `flu
 ## 🚀 发布与应用内更新
 
 1. 修改 `pubspec.yaml` 里的 `version:`（如 `1.2.0+3`），合并到 `main`。
-2. 打标签并推送：`git tag v1.2.0 && git push --tags`
-3. **Release** 工作流会构建按 ABI 拆分的 APK（`arm64-v8a`、`armeabi-v7a`、`x86_64`）和一个通用 APK，生成 `SHA256SUMS.txt`，并发布 GitHub Release。带后缀的标签（如 `v1.2.0-beta.1`）会作为预发布，**不会**推送给用户。
+2. 打标签并推送：`git tag v1.2.0 && git push origin v1.2.0`
+3. 推送 `v*` 标签会触发 `.github/workflows/release.yml`，构建按 ABI 拆分的 APK（`arm64-v8a`、`armeabi-v7a`、`x86_64`）和一个通用 APK，生成 `SHA256SUMS.txt`，并发布 GitHub Release。带后缀的标签（如 `v1.2.0-beta.1`）会作为预发布，**不会**推送给用户。
 
 App 启动时最多每 24 小时检查一次 `zhuhedong/deeix-client` 的 `releases/latest`（地址在 `lib/features/update/data/update_service.dart` 的 `UpdateConfig`），也可以在 **设置 › 检查更新** 手动检查。Android 会按设备 ABI 下载对应 APK（找不到时用通用包），校验大小和 SHA‑256 后打开系统安装界面（首次需允许“安装未知应用”）。iOS 只会打开发布页面。
 

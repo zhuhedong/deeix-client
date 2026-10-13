@@ -11,6 +11,21 @@ A native, cross-platform **Flutter client for the DEEIX‑Chat API** — a fast,
 
 > Unofficial, community‑built client. It **only calls** the DEEIX‑Chat HTTP API (calibrated to **v0.4.4**) and does **not** modify or ship any backend. You bring your own deployed server.
 
+**Current version: v1.1.0** (`1.1.0+2`), adapted to the DEEIX‑Chat **v0.4.4** backend.
+
+## 📥 Download
+
+Get the APK from [GitHub Releases](https://github.com/zhuhedong/deeix-client/releases):
+
+| File | For |
+|---|---|
+| `arm64-v8a` APK | **Recommended** — almost all modern Android phones |
+| `armeabi-v7a` APK | Older 32‑bit devices |
+| `x86_64` APK | Emulators / x86 devices |
+| universal APK | Any device (larger) |
+
+Verify downloads with `SHA256SUMS.txt` (`sha256sum -c SHA256SUMS.txt`). Once installed, the app updates itself from new Releases.
+
 ---
 
 ## ✨ Features
@@ -32,7 +47,7 @@ A native, cross-platform **Flutter client for the DEEIX‑Chat API** — a fast,
 - MCP tool selection; prompt presets
 
 **Account**
-- Username/email login, 2FA challenge, SSO (OIDC/OAuth via system browser + PKCE)
+- Username/email + password login, 2FA challenge (the SSO entry is hidden on the login screen; `_kShowSsoEntry` in `login_page.dart`)
 - Registration, password reset, profile edit, active‑device management
 - Usage & billing overview, uploaded‑files management
 
@@ -41,13 +56,14 @@ A native, cross-platform **Flutter client for the DEEIX‑Chat API** — a fast,
 - **In‑app configurable server address**, font scale, bubble density, English / 中文
 
 
-**New in this release (DEEIX‑Chat 0.4.4)**
+**New in v1.1.0 (DEEIX‑Chat 0.4.4)**
 - Knowledge bases: browse built‑in / personal ones, create, upload or add files, pick up to 8 per chat for retrieval
 - Personal model providers (bring your own API key): probe, choose models, enable/disable, rotate key
 - Image / video generation mode in chat (image edit when an image is attached)
 - Temporary (unsaved) chat
 - Message delete, fork to a new conversation, conversation labels, server full‑text search
 - Account security: TOTP two‑factor setup / disable / recovery codes; 14‑day activity chart
+- In‑app update via GitHub Releases
 
 ---
 
@@ -131,10 +147,11 @@ lib/
 ├── main.dart / app.dart          # bootstrap, MaterialApp
 ├── core/                         # network (dio, interceptors), auth, settings, constants, utils
 ├── features/                     # feature‑first modules
-│   ├── auth/                     # login, 2FA, SSO, register, reset, sessions, profile
+│   ├── auth/                     # password login, 2FA, register, reset, sessions, profile
 │   ├── chat/                     # streaming controller, chat page, bubbles, composer
 │   ├── conversation/             # history drawer + list controller
 │   ├── models/ tools/ prompt/    # model list, MCP tools, prompt presets
+│   ├── knowledge/ model_provider/ temporary_chat/ update/
 │   ├── file/ project/ billing/ search/ announcement/ settings/
 ├── shared/                       # theme (design tokens), reusable widgets, models, i18n
 └── router/                       # go_router config
@@ -153,7 +170,7 @@ dart run build_runner build \
   --delete-conflicting-outputs           # regenerate *.freezed.dart / *.g.dart
 ```
 
-CI runs on every push/PR (`.github/workflows/ci.yml`): format check → `flutter analyze` → debug APK build, uploaded as an artifact.
+CI runs on pushes to `main`, on PRs and manually (`.github/workflows/ci.yml`): format check → `flutter analyze` → debug APK build, uploaded as an artifact.
 
 Generated files (`*.g.dart`, `*.freezed.dart`) are committed so the app builds without running the generator first.
 
@@ -173,8 +190,8 @@ Calibrated to **DEEIX‑Chat API v0.4.4**. Highlights:
 ## 🚀 Releasing & in‑app updates
 
 1. Bump `version:` in `pubspec.yaml` (e.g. `1.2.0+3`) and merge to `main`.
-2. Tag and push: `git tag v1.2.0 && git push --tags`
-3. The **Release** workflow builds split‑per‑ABI APKs (`arm64-v8a`, `armeabi-v7a`, `x86_64`) plus a universal APK, writes `SHA256SUMS.txt`, and publishes a GitHub Release. Tags with a suffix (`v1.2.0-beta.1`) become pre‑releases and are **not** offered to users.
+2. Tag and push: `git tag v1.2.0 && git push origin v1.2.0`
+3. Pushing a `v*` tag triggers `.github/workflows/release.yml`, which builds split‑per‑ABI APKs (`arm64-v8a`, `armeabi-v7a`, `x86_64`) plus a universal APK, writes `SHA256SUMS.txt`, and publishes a GitHub Release. Tags with a suffix (`v1.2.0-beta.1`) become pre‑releases and are **not** offered to users.
 
 The app checks `releases/latest` of `zhuhedong/deeix-client` (see `UpdateConfig` in `lib/features/update/data/update_service.dart`) at most once every 24 h on launch, and on demand from **Settings › 检查更新**. On Android it downloads the APK for the device ABI (fallback universal), verifies size + SHA‑256, then opens the system installer (the user must allow “install unknown apps” once). iOS only opens the release page.
 
