@@ -42,12 +42,7 @@ class AuthInterceptor extends Interceptor {
     final status = err.response?.statusCode;
     final path = err.requestOptions.path;
 
-    final isAuthEndpoint =
-        path.contains(ApiEndpoints.login) ||
-        path.contains(ApiEndpoints.refresh) ||
-        path.contains(ApiEndpoints.registerEmailStart) ||
-        path.contains(ApiEndpoints.registerEmailComplete) ||
-        path.contains('/auth/');
+    final isAuthEndpoint = isPublicAuthPath(path);
 
     if (status != 401 || isAuthEndpoint) {
       return handler.next(err);
@@ -90,6 +85,27 @@ class AuthInterceptor extends Interceptor {
     } on DioException catch (e) {
       return handler.next(e);
     }
+  }
+
+  /// Public (no-login) auth routes where a 401 means bad credentials, not an
+  /// expired access token. Protected `/auth/*` routes such as
+  /// `/auth/sessions`, `/auth/logout-all` and `/auth/password/change/*` must
+  /// still go through refresh.
+  static bool isPublicAuthPath(String path) {
+    const public = [
+      ApiEndpoints.login,
+      ApiEndpoints.loginOptions,
+      ApiEndpoints.refresh,
+      ApiEndpoints.twoFactorEmailStart,
+      ApiEndpoints.twoFactorVerify,
+      ApiEndpoints.registerEmailStart,
+      ApiEndpoints.registerEmailComplete,
+      ApiEndpoints.passwordResetStart,
+      ApiEndpoints.passwordResetComplete,
+      ApiEndpoints.logout,
+    ];
+    final p = path.split('?').first;
+    return p.contains('/auth/providers/') || public.any(p.endsWith);
   }
 
   Future<bool> _refreshToken() async {
