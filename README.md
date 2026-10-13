@@ -156,7 +156,6 @@ Calibrated to **DEEIX‑Chat API v0.4.4**. Highlights:
 - Unified envelope `{ "data": T, "errorMsg": "" }`
 - Access token via `Authorization: Bearer …`; refresh token in an HttpOnly cookie (handled by the cookie jar)
 - Streaming: `POST …/messages/stream` returning `application/x-ndjson`
-- SSO (OIDC/OAuth2): provider auth bridge — `POST /auth/providers/{slug}/authorize` → server callback → `com.deeix.chat:/oauth/callback?grant=…` → `POST /auth/providers/{slug}/exchange` (PKCE)
 - Conversation ids are **publicID** strings (not numeric)
 
 ---

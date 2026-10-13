@@ -156,7 +156,6 @@ CI 会在每次 push/PR 运行(`.github/workflows/ci.yml`):格式检查 → `flu
 - 统一信封 `{ "data": T, "errorMsg": "" }`
 - Access Token 走 `Authorization: Bearer …`;Refresh Token 在 HttpOnly Cookie 中(由 cookie jar 处理)
 - 流式:`POST …/messages/stream`,返回 `application/x-ndjson`
-- SSO(OIDC/OAuth2):使用服务端 provider auth bridge —— `POST /auth/providers/{slug}/authorize` → 服务端回调 → `com.deeix.chat:/oauth/callback?grant=…` → `POST /auth/providers/{slug}/exchange`(PKCE)
 - 会话 id 为 **publicID** 字符串(非数字)
 
 ---
