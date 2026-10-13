@@ -169,6 +169,28 @@ CI 会在每次 push/PR 运行(`.github/workflows/ci.yml`):格式检查 → `flu
 
 ---
 
+
+## 🚀 发布与应用内更新
+
+1. 修改 `pubspec.yaml` 里的 `version:`（如 `1.2.0+3`），合并到 `main`。
+2. 打标签并推送：`git tag v1.2.0 && git push --tags`
+3. **Release** 工作流会构建按 ABI 拆分的 APK（`arm64-v8a`、`armeabi-v7a`、`x86_64`）和一个通用 APK，生成 `SHA256SUMS.txt`，并发布 GitHub Release。带后缀的标签（如 `v1.2.0-beta.1`）会作为预发布，**不会**推送给用户。
+
+App 启动时最多每 24 小时检查一次 `zhuhedong/deeix-client` 的 `releases/latest`（地址在 `lib/features/update/data/update_service.dart` 的 `UpdateConfig`），也可以在 **设置 › 检查更新** 手动检查。Android 会按设备 ABI 下载对应 APK（找不到时用通用包），校验大小和 SHA‑256 后打开系统安装界面（首次需允许“安装未知应用”）。iOS 只会打开发布页面。
+
+**签名所需的仓库 Secrets**（Settings › Secrets and variables › Actions）：
+
+| Secret | 内容 |
+|---|---|
+| `ANDROID_KEYSTORE_BASE64` | `base64 -w0 release.jks` 的输出 |
+| `ANDROID_KEYSTORE_PASSWORD` | keystore 密码 |
+| `ANDROID_KEY_ALIAS` | 密钥别名 |
+| `ANDROID_KEY_PASSWORD` | 密钥密码 |
+
+> ⚠️ 没配置这些时，发布包会用 **debug 签名**，而且每次 CI 的 debug 密钥都不同。Android 不允许签名变化的覆盖安装，所以必须先配好固定的正式签名，应用内更新才能正常使用。可用 `keytool -genkey -v -keystore release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias deeix` 生成，并妥善保管 —— 丢失后用户只能卸载重装。
+
+---
+
 ## 🤝 贡献
 
 欢迎 Issue 与 PR。提交前请保持 `flutter analyze` 干净,并执行 `dart format .`。

@@ -169,6 +169,28 @@ Calibrated to **DEEIX‑Chat API v0.4.4**. Highlights:
 
 ---
 
+
+## 🚀 Releasing & in‑app updates
+
+1. Bump `version:` in `pubspec.yaml` (e.g. `1.2.0+3`) and merge to `main`.
+2. Tag and push: `git tag v1.2.0 && git push --tags`
+3. The **Release** workflow builds split‑per‑ABI APKs (`arm64-v8a`, `armeabi-v7a`, `x86_64`) plus a universal APK, writes `SHA256SUMS.txt`, and publishes a GitHub Release. Tags with a suffix (`v1.2.0-beta.1`) become pre‑releases and are **not** offered to users.
+
+The app checks `releases/latest` of `zhuhedong/deeix-client` (see `UpdateConfig` in `lib/features/update/data/update_service.dart`) at most once every 24 h on launch, and on demand from **Settings › 检查更新**. On Android it downloads the APK for the device ABI (fallback universal), verifies size + SHA‑256, then opens the system installer (the user must allow “install unknown apps” once). iOS only opens the release page.
+
+**Signing secrets** (Settings › Secrets and variables › Actions):
+
+| Secret | Value |
+|---|---|
+| `ANDROID_KEYSTORE_BASE64` | `base64 -w0 release.jks` |
+| `ANDROID_KEYSTORE_PASSWORD` | keystore password |
+| `ANDROID_KEY_ALIAS` | key alias |
+| `ANDROID_KEY_PASSWORD` | key password |
+
+> ⚠️ Without these the release is **debug‑signed** with a key that changes between CI runs. Android refuses to update an app whose signature changed, so in‑app updates only work reliably once a fixed release keystore is configured. Create one with `keytool -genkey -v -keystore release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias deeix` and keep it safe — losing it means users must uninstall to update.
+
+---
+
 ## 🤝 Contributing
 
 Issues and PRs welcome. Please keep `flutter analyze` clean and run `dart format .` before submitting.
