@@ -9,7 +9,7 @@
 ![Dart](https://img.shields.io/badge/Dart-3.12-0175C2?logo=dart)
 ![Platforms](https://img.shields.io/badge/platforms-Android%20%7C%20iOS-informational)
 
-> 非官方、社区构建的客户端。它**只调用** DEEIX‑Chat 的 HTTP API(已按 **v0.3.3** 校准),**不修改也不包含**任何后端代码 —— 需自备已部署的服务器。
+> 非官方、社区构建的客户端。它**只调用** DEEIX‑Chat 的 HTTP API(已按 **v0.4.4** 校准),**不修改也不包含**任何后端代码 —— 需自备已部署的服务器。
 
 ---
 
@@ -152,10 +152,11 @@ CI 会在每次 push/PR 运行(`.github/workflows/ci.yml`):格式检查 → `flu
 
 ## 🔌 API 兼容性
 
-按 **DEEIX‑Chat API v0.3.3** 校准。要点:
+按 **DEEIX‑Chat API v0.4.4** 校准。要点:
 - 统一信封 `{ "data": T, "errorMsg": "" }`
 - Access Token 走 `Authorization: Bearer …`;Refresh Token 在 HttpOnly Cookie 中(由 cookie jar 处理)
 - 流式:`POST …/messages/stream`,返回 `application/x-ndjson`
+- SSO(OIDC/OAuth2):使用服务端 provider auth bridge —— `POST /auth/providers/{slug}/authorize` → 服务端回调 → `com.deeix.chat:/oauth/callback?grant=…` → `POST /auth/providers/{slug}/exchange`(PKCE)
 - 会话 id 为 **publicID** 字符串(非数字)
 
 ---

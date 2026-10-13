@@ -18,4 +18,11 @@ class PkcePair {
     final challenge = base64UrlEncode(digest.bytes).replaceAll('=', '');
     return PkcePair(verifier: verifier, challenge: challenge);
   }
+
+  /// Random base64url token (43 chars), e.g. for the OAuth client state.
+  static String randomToken() {
+    final random = Random.secure();
+    final bytes = List<int>.generate(32, (_) => random.nextInt(256));
+    return base64UrlEncode(bytes).replaceAll('=', '');
+  }
 }

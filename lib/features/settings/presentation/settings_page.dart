@@ -262,7 +262,7 @@ class SettingsPage extends ConsumerWidget {
                     subtitle: Text(
                       v == null
                           ? 'DEEIX'
-                          : '${v.appName} ${v.version}+${v.buildNumber}  ·  API 0.3.3',
+                          : '${v.appName} ${v.version}+${v.buildNumber}  ·  API 0.4.4',
                     ),
                   );
                 },

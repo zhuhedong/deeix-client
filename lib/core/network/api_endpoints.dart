@@ -85,8 +85,11 @@ class ApiEndpoints {
   // Prompt presets
   static const String promptPresets = '/prompt-presets';
 
-  // OAuth / OIDC providers (web-aligned)
-  static String providerStart(String slug) => '/auth/providers/$slug/start';
-  static String providerCallback(String slug) =>
-      '/auth/providers/$slug/callback';
+  // OAuth / OIDC provider auth bridge (DEEIX-Chat >= 0.4.4).
+  // The provider redirects to the server callback, which then redirects to
+  // the native redirect URI with a one-time `grant` to exchange.
+  static String providerAuthorize(String slug) =>
+      '/auth/providers/$slug/authorize';
+  static String providerExchange(String slug) =>
+      '/auth/providers/$slug/exchange';
 }

@@ -84,6 +84,7 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>deeix</string>
+				<string>com.deeix.chat</string>
 			</array>
 		</dict>
 	</array>

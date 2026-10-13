@@ -9,7 +9,7 @@ A native, cross-platform **Flutter client for the DEEIX‑Chat API** — a fast,
 ![Dart](https://img.shields.io/badge/Dart-3.12-0175C2?logo=dart)
 ![Platforms](https://img.shields.io/badge/platforms-Android%20%7C%20iOS-informational)
 
-> Unofficial, community‑built client. It **only calls** the DEEIX‑Chat HTTP API (calibrated to **v0.3.3**) and does **not** modify or ship any backend. You bring your own deployed server.
+> Unofficial, community‑built client. It **only calls** the DEEIX‑Chat HTTP API (calibrated to **v0.4.4**) and does **not** modify or ship any backend. You bring your own deployed server.
 
 ---
 
@@ -152,10 +152,11 @@ Generated files (`*.g.dart`, `*.freezed.dart`) are committed so the app builds w
 
 ## 🔌 API compatibility
 
-Calibrated to **DEEIX‑Chat API v0.3.3**. Highlights:
+Calibrated to **DEEIX‑Chat API v0.4.4**. Highlights:
 - Unified envelope `{ "data": T, "errorMsg": "" }`
 - Access token via `Authorization: Bearer …`; refresh token in an HttpOnly cookie (handled by the cookie jar)
 - Streaming: `POST …/messages/stream` returning `application/x-ndjson`
+- SSO (OIDC/OAuth2): provider auth bridge — `POST /auth/providers/{slug}/authorize` → server callback → `com.deeix.chat:/oauth/callback?grant=…` → `POST /auth/providers/{slug}/exchange` (PKCE)
 - Conversation ids are **publicID** strings (not numeric)
 
 ---

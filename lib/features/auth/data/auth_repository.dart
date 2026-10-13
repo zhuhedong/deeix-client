@@ -4,7 +4,6 @@ import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 
 import '../../../core/auth/pkce.dart';
 import '../../../core/auth/token_storage.dart';
-import '../../../core/constants/app_config.dart';
 import '../../../core/network/api_endpoints.dart';
 import '../../../core/network/api_response.dart';
 import '../../../core/network/auth_interceptor.dart';
@@ -96,46 +95,60 @@ class AuthRepository {
     }
   }
 
-  /// OAuth/OIDC login via system browser (flutter_web_auth_2 + PKCE).
-  ///
-  /// Callback scheme must match platform config: `deeix://auth/callback`.
+  /// Native client id accepted by the DEEIX-Chat provider auth bridge.
+  static const String providerBridgeClientId = 'com.deeix.chat.native';
+
+  /// Fixed native redirect URI required by the server for [providerBridgeClientId].
+  static const String providerBridgeRedirectUri =
+      'com.deeix.chat:/oauth/callback';
+  static const String providerBridgeCallbackScheme = 'com.deeix.chat';
+
+  /// OAuth/OIDC login via system browser using the DEEIX-Chat 0.4.4+
+  /// provider auth bridge (PKCE):
+  /// 1. POST /auth/providers/{slug}/authorize -> authorizationURL
+  /// 2. browser: provider -> server callback -> redirect with `grant` & `state`
+  /// 3. POST /auth/providers/{slug}/exchange with grant + codeVerifier
   Future<LoginResult> loginWithProvider(IdentityProvider provider) async {
     try {
       final pkce = PkcePair.generate();
-      const callbackScheme = 'deeix';
-      const redirectUri = 'deeix://auth/callback';
-      final startUri =
-          Uri.parse(
-            '$baseUrl${AppConfig.apiPrefix}'
-            '${ApiEndpoints.providerStart(provider.slug)}',
-          ).replace(
-            queryParameters: {
-              'redirect_uri': redirectUri,
-              'code_challenge': pkce.challenge,
-              'code_challenge_method': 'S256',
-              'intent': 'login',
-            },
-          );
+      final clientState = PkcePair.randomToken();
+
+      final startResponse = await _dio.post(
+        ApiEndpoints.providerAuthorize(provider.slug),
+        data: {
+          'clientID': providerBridgeClientId,
+          'redirectURI': providerBridgeRedirectUri,
+          'codeChallenge': pkce.challenge,
+          'clientState': clientState,
+          'intent': 'login',
+        },
+      );
+      final start = ApiEnvelope.unwrapMap(startResponse);
+      final authorizationUrl = '${start['authorizationURL'] ?? ''}';
+      if (authorizationUrl.isEmpty) {
+        throw ApiException(message: 'SSO 未返回授权地址');
+      }
 
       final result = await FlutterWebAuth2.authenticate(
-        url: startUri.toString(),
-        callbackUrlScheme: callbackScheme,
+        url: authorizationUrl,
+        callbackUrlScheme: providerBridgeCallbackScheme,
       );
       final returned = Uri.parse(result);
-      final code = returned.queryParameters['code'];
+      final grant = returned.queryParameters['grant'];
       final state = returned.queryParameters['state'];
-      if (code == null || code.isEmpty) {
-        throw ApiException(message: 'SSO 未返回授权码');
+      if (state != clientState) {
+        throw ApiException(message: 'SSO 回调 state 校验失败');
+      }
+      if (grant == null || grant.isEmpty) {
+        throw ApiException(message: 'SSO 未返回授权凭证');
       }
 
       final response = await _dio.post(
-        ApiEndpoints.providerCallback(provider.slug),
+        ApiEndpoints.providerExchange(provider.slug),
         data: {
-          'code': code,
-          'state': state,
-          'redirectURI': redirectUri,
+          'clientID': providerBridgeClientId,
+          'grant': grant,
           'codeVerifier': pkce.verifier,
-          'intent': 'login',
         },
       );
       return _applyLoginData(ApiEnvelope.unwrapMap(response));
