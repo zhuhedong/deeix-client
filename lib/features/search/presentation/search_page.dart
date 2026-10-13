@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/network/api_response.dart';
 import '../../../shared/models/conversation.dart';
 import '../../../shared/theme/app_tokens.dart';
 import '../../../shared/widgets/error_view.dart';
@@ -30,7 +31,13 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
   Future<List<Conversation>> _search(String q) async {
     final repo = await ref.read(conversationRepositoryProvider.future);
-    // Search active + archived for better coverage.
+    // DEEIX-Chat 0.4.4+: server-side full-text search (titles + messages).
+    try {
+      return (await repo.search(q, pageSize: 50)).results;
+    } on ApiException catch (e) {
+      // Older servers: fall back to the title filter on the list endpoint.
+      if (e.statusCode != 404) rethrow;
+    }
     final active = await repo.listPage(
       page: 1,
       pageSize: 50,

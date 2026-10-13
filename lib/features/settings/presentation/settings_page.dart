@@ -195,6 +195,24 @@ class SettingsPage extends ConsumerWidget {
                 onTap: () => context.push('/files'),
               ),
               ListTile(
+                leading: const Icon(Icons.library_books_outlined),
+                title: const Text('知识库'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => context.push('/knowledge-bases'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.hub_outlined),
+                title: const Text('我的模型服务'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => context.push('/model-providers'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.shield_outlined),
+                title: const Text('账户安全（两步验证）'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => context.push('/security'),
+              ),
+              ListTile(
                 leading: const Icon(Icons.devices_other_rounded),
                 title: const Text('活跃设备'),
                 trailing: const Icon(Icons.chevron_right_rounded),
