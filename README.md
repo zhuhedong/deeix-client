@@ -8,13 +8,13 @@ A native **Flutter** client for DEEIX-Chat — a polished Android front end for 
 ![Flutter](https://img.shields.io/badge/Flutter-3.44.6-02569B?logo=flutter)
 ![Dart](https://img.shields.io/badge/Dart-3.12-0175C2?logo=dart)
 ![Platform](https://img.shields.io/badge/platform-Android-informational)
-![Version](https://img.shields.io/badge/version-v1.1.1-blue)
+![Version](https://img.shields.io/badge/version-v1.1.2-blue)
 
 > Unofficial, community-built client. It **only calls** the DEEIX-Chat HTTP API (calibrated to **v0.4.4**) and does **not** modify or ship any backend. You bring your own deployed server.
 
 | | |
 |---|---|
-| **App version** | `1.1.1+3` (tag `v1.1.1`) |
+| **App version** | `1.1.2+4` (tag `v1.1.2`) |
 | **Backend target** | DEEIX-Chat **v0.4.4** |
 | **Default API** | `https://chat.cli-help.com` |
 | **Releases** | [github.com/zhuhedong/deeix-client/releases](https://github.com/zhuhedong/deeix-client/releases) |
@@ -26,7 +26,7 @@ Published artifacts are **Android APKs**. An `ios/` project tree exists for loca
 
 ## Download
 
-Get APKs from **[GitHub Releases](https://github.com/zhuhedong/deeix-client/releases)** (latest: [v1.1.1](https://github.com/zhuhedong/deeix-client/releases/tag/v1.1.1)):
+Get APKs from **[GitHub Releases](https://github.com/zhuhedong/deeix-client/releases)** (latest: [v1.1.2](https://github.com/zhuhedong/deeix-client/releases/tag/v1.1.2)):
 
 | Asset | Use when |
 |---|---|

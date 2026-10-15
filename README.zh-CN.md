@@ -8,13 +8,13 @@
 ![Flutter](https://img.shields.io/badge/Flutter-3.44.6-02569B?logo=flutter)
 ![Dart](https://img.shields.io/badge/Dart-3.12-0175C2?logo=dart)
 ![Platform](https://img.shields.io/badge/platform-Android-informational)
-![Version](https://img.shields.io/badge/version-v1.1.1-blue)
+![Version](https://img.shields.io/badge/version-v1.1.2-blue)
 
 > 非官方、社区构建的客户端。它**只调用** DEEIX-Chat 的 HTTP API（已按 **v0.4.4** 校准），**不修改也不包含**任何后端代码 —— 需自备已部署的服务器。
 
 | | |
 |---|---|
-| **应用版本** | `1.1.1+3`（标签 `v1.1.1`） |
+| **应用版本** | `1.1.2+4`（标签 `v1.1.2`） |
 | **后端目标** | DEEIX-Chat **v0.4.4** |
 | **默认 API** | `https://chat.cli-help.com` |
 | **发布页** | [github.com/zhuhedong/deeix-client/releases](https://github.com/zhuhedong/deeix-client/releases) |
@@ -26,7 +26,7 @@
 
 ## 下载
 
-从 **[GitHub Releases](https://github.com/zhuhedong/deeix-client/releases)** 获取 APK（最新：[v1.1.1](https://github.com/zhuhedong/deeix-client/releases/tag/v1.1.1)）：
+从 **[GitHub Releases](https://github.com/zhuhedong/deeix-client/releases)** 获取 APK（最新：[v1.1.2](https://github.com/zhuhedong/deeix-client/releases/tag/v1.1.2)）：
 
 | 产物 | 适用场景 |
 |---|---|
